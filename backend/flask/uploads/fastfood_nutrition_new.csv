@@ -1,0 +1,338 @@
+Item,Category,Calories,Total Fat,Saturated Fat,Trans Fat,Cholesterol,Sodium,Carbohydrates,Dietary Fiber,Sugars,Protein,Restaurant,States
+Whopper® Sandwich,Burgers,660.0,40.0,12.0,1.5,90.0,980.0,49.0,2.0,11.0,28.0,Burger King,Florida
+Whopper® Sandwich with Cheese,Burgers,740.0,46.0,16.0,2.0,115.0,1340.0,50.0,2.0,11.0,32.0,Burger King,Florida
+Bacon & Cheese Whopper® Sandwich,Burgers,790.0,51.0,17.0,2.0,125.0,1560.0,50.0,2.0,11.0,35.0,Burger King,Florida
+Double Whopper® Sandwich,Burgers,900.0,58.0,20.0,3.0,175.0,1050.0,49.0,2.0,11.0,48.0,Burger King,Florida
+Double Whopper® Sandwich with Cheese,Burgers,980.0,64.0,24.0,3.0,195.0,1410.0,50.0,2.0,11.0,52.0,Burger King,Florida
+Triple Whopper® Sandwich,Burgers,1130.0,75.0,28.0,4.0,255.0,1120.0,49.0,2.0,11.0,67.0,Burger King,Florida
+Triple Whopper® Sandwich with Cheese,Burgers,1220.0,82.0,32.0,4.5,280.0,1470.0,50.0,2.0,11.0,71.0,Burger King,Florida
+Whopper JR.® Sandwich,Burgers,310.0,18.0,5.0,0.5,40.0,390.0,27.0,1.0,7.0,13.0,Burger King,Florida
+Bacon King Sandwich,Burgers,1150.0,79.0,31.0,3.5,240.0,2150.0,49.0,2.0,10.0,61.0,Burger King,Michigan
+Cheddar Bacon King Sandwich,Burgers,1190.0,84.0,33.0,3.5,235.0,1930.0,50.0,2.0,11.0,64.0,Burger King,Michigan
+Single Quarter Pound King Sandwich,Burgers,580.0,29.0,13.0,1.5,105.0,1310.0,49.0,2.0,10.0,32.0,Burger King,Unknown
+Double Quarter Pound King Sandwich,Burgers,900.0,54.0,25.0,3.0,210.0,1740.0,50.0,2.0,11.0,56.0,Burger King,Unknown
+Single Stacker King,Burgers,700.0,42.0,16.0,2.0,125.0,1360.0,48.0,1.0,10.0,35.0,Burger King,Unknown
+Double Stacker King,Burgers,1050.0,68.0,28.0,3.5,235.0,1870.0,49.0,1.0,11.0,61.0,Burger King,Unknown
+IMPOSSIBLE Whopper® Sandwich,Burgers,630.0,34.0,11.0,0.0,10.0,1080.0,58.0,4.0,12.0,25.0,Burger King,Florida
+Hamburger,Burgers,240.0,10.0,3.5,0.5,35.0,380.0,26.0,1.0,6.0,13.0,Burger King,Unknown
+Cheeseburger,Burgers,280.0,13.0,6.0,0.5,45.0,560.0,27.0,1.0,7.0,15.0,Burger King,Unknown
+Double Hamburger,Burgers,350.0,18.0,7.0,1.0,70.0,410.0,26.0,1.0,6.0,21.0,Burger King,Unknown
+Double Cheeseburger,Burgers,390.0,21.0,9.0,1.5,85.0,590.0,27.0,1.0,7.0,23.0,Burger King,Oregon
+Extra Long Cheeseburger,Burgers,630.0,37.0,14.0,1.5,100.0,1050.0,45.0,2.0,9.0,29.0,Burger King,Unknown
+Bacon Cheeseburger,Burgers,320.0,16.0,7.0,0.5,55.0,710.0,27.0,1.0,7.0,17.0,Burger King,Unknown
+Bacon Double Cheeseburger,Burgers,420.0,24.0,10.0,1.5,90.0,740.0,27.0,1.0,7.0,25.0,Burger King,Oregon
+Crispy Chicken Sandwich,Chicken,670.0,41.0,7.0,0.0,60.0,1080.0,54.0,2.0,8.0,23.0,Burger King,Unknown
+Spicy Crispy Chicken Sandwich,Chicken,700.0,42.0,7.0,0.0,65.0,1140.0,57.0,3.0,8.0,25.0,Burger King,Unknown
+Original Chicken Sandwich,Chicken,660.0,40.0,7.0,0.0,75.0,1170.0,48.0,2.0,5.0,28.0,Burger King,Unknown
+Bacon & Cheese Crispy Chicken Sandwich,Chicken,800.0,52.0,13.0,1.0,95.0,1650.0,55.0,2.0,8.0,30.0,Burger King,Unknown
+BBQ Bacon Crispy Chicken Sandwich,Chicken,790.0,49.0,10.0,0.5,80.0,1630.0,60.0,2.0,13.0,28.0,Burger King,Unknown
+Crispy Chicken Jr.,Chicken,450.0,30.0,5.0,0.0,30.0,780.0,34.0,2.0,5.0,12.0,Burger King,Unknown
+Spicy Crispy Chicken Jr.,Chicken,390.0,21.0,3.5,0.0,30.0,740.0,37.0,2.0,6.0,12.0,Burger King,Unknown
+Chicken Nuggets- 4pc,Chicken,170.0,11.0,1.5,0.0,25.0,310.0,11.0,1.0,0.0,8.0,Burger King,Unknown
+Chicken Nuggets- 6pc,Chicken,260.0,16.0,2.5,0.0,35.0,470.0,16.0,1.0,0.0,12.0,Burger King,Unknown
+Chicken Nuggets- 10pc,Chicken,430.0,27.0,4.5,0.0,55.0,780.0,27.0,2.0,0.0,20.0,Burger King,Unknown
+Chicken Nuggets- 20pc,Chicken,860.0,54.0,9.0,0.0,115.0,1570.0,53.0,3.0,1.0,39.0,Burger King,Unknown
+Spicy Chicken Nuggets- 4pc,Chicken,210.0,15.0,3.0,0.0,20.0,570.0,11.0,2.0,0.0,8.0,Burger King,Unknown
+Spicy Chicken Nuggets- 6pc,Chicken,320.0,22.0,4.5,0.0,35.0,850.0,17.0,3.0,0.0,12.0,Burger King,Unknown
+Spicy Chicken Nuggets- 10 pc,Chicken,530.0,37.0,7.0,0.0,55.0,1420.0,28.0,4.0,1.0,20.0,Burger King,Unknown
+Spicy Chicken Nuggets- 20 pc,Chicken,1050.0,74.0,15.0,0.0,110.0,2840.0,56.0,9.0,1.0,40.0,Burger King,Unknown
+Chicken Fries – 9 pc.,Chicken,280.0,17.0,2.5,0.0,35.0,850.0,20.0,1.0,1.0,13.0,Burger King,Texas
+Crispy Taco,Chicken,170.0,9.0,3.0,0.0,10.0,410.0,19.0,2.0,1.0,5.0,Burger King,Unknown
+BIG FISH Sandwich,Chicken,510.0,28.0,4.5,0.0,30.0,1180.0,51.0,2.0,7.0,16.0,Burger King,Unknown
+Chicken Nuggets- 4pc,Burgers,170.0,11.0,1.5,0.0,25.0,310.0,11.0,1.0,0.0,8.0,Burger King,Unknown
+Chicken Nuggets- 6pc,Burgers,260.0,16.0,2.5,0.0,35.0,470.0,16.0,1.0,0.0,12.0,Burger King,Unknown
+Hamburger,Burgers,240.0,10.0,3.5,0.5,35.0,380.0,26.0,1.0,6.0,13.0,Burger King,Unknown
+Cheeseburger,Burgers,280.0,13.0,6.0,0.5,45.0,560.0,27.0,1.0,7.0,15.0,Burger King,Unknown
+CROISSAN’WICH® Egg & Cheese,Breakfast,340.0,18.0,8.0,0.0,160.0,610.0,29.0,1.0,4.0,12.0,Burger King,Unknown
+"CROISSAN’WICH® Sausage, Egg & Cheese",Breakfast,500.0,33.0,13.0,0.0,195.0,930.0,30.0,1.0,4.0,19.0,Burger King,Unknown
+"CROISSAN’WICH® Ham, Egg & Cheese",Breakfast,370.0,19.0,8.0,0.0,175.0,1030.0,30.0,1.0,5.0,17.0,Burger King,Unknown
+"CROISSAN’WICH® Bacon, Egg & Cheese",Breakfast,370.0,21.0,9.0,0.0,170.0,760.0,30.0,1.0,4.0,14.0,Burger King,Unknown
+Fully Loaded CROISSAN’WICH®,Breakfast,610.0,40.0,17.0,0.5,225.0,1680.0,31.0,1.0,5.0,28.0,Burger King,Unknown
+Double CROISSAN’WICH® with Sausage & Bacon,Breakfast,580.0,40.0,16.0,0.5,215.0,1260.0,31.0,1.0,5.0,23.0,Burger King,Unknown
+Double CROISSAN’WICH® with Sausage,Breakfast,710.0,52.0,20.0,0.5,240.0,1420.0,31.0,1.0,5.0,29.0,Burger King,Unknown
+Double CROISSAN’WICH® with Ham & Sausage,Breakfast,580.0,38.0,16.0,0.5,220.0,1530.0,31.0,1.0,5.0,27.0,Burger King,Unknown
+Fully Loaded Biscuit,Breakfast,640.0,45.0,20.0,0.0,225.0,2190.0,31.0,1.0,4.0,28.0,Burger King,Unknown
+"Ham, Egg, & Cheese Biscuit",Breakfast,400.0,24.0,12.0,0.0,175.0,1550.0,29.0,1.0,3.0,17.0,Burger King,Unknown
+"Sausage, Egg, & Cheese Biscuit",Breakfast,530.0,38.0,17.0,0.0,195.0,1440.0,29.0,1.0,3.0,19.0,Burger King,Unknown
+"Bacon, Egg & Cheese Biscuit",Breakfast,400.0,26.0,13.0,0.0,170.0,1270.0,29.0,1.0,3.0,13.0,Burger King,Unknown
+Sausage Biscuit,Breakfast,420.0,28.0,6.0,0.0,35.0,1050.0,28.0,1.0,2.0,12.0,Burger King,Unknown
+Breakfast Burrito Jr.,Breakfast,370.0,23.0,8.0,0.0,150.0,930.0,27.0,3.0,2.0,15.0,Burger King,Unknown
+EGG-NORMOUS BURRITOΡ,Breakfast,780.0,42.0,15.0,0.0,355.0,1960.0,68.0,3.0,4.0,32.0,Burger King,Unknown
+BK™ Ultimate Breakfast Platter,Breakfast,930.0,44.0,11.0,0.0,390.0,2230.0,110.0,4.0,40.0,24.0,Burger King,Unknown
+NY Ultimate Platter (Regional menu item),Breakfast,900.0,46.0,12.0,0.0,380.0,1760.0,95.0,5.0,31.0,25.0,Burger King,Unknown
+Pancake and Sausage platter,Breakfast,610.0,31.0,9.0,0.0,80.0,1010.0,72.0,1.0,30.0,12.0,Burger King,Unknown
+Hash Browns – small,Breakfast,250.0,16.0,3.5,0.0,0.0,580.0,24.0,3.0,0.0,2.0,Burger King,Unknown
+Hash Browns – medium,Breakfast,500.0,33.0,7.0,0.0,0.0,1140.0,48.0,7.0,0.0,4.0,Burger King,Unknown
+Hash Browns – large,Breakfast,670.0,44.0,9.0,0.0,0.0,1530.0,65.0,9.0,0.0,5.0,Burger King,Unknown
+French Toast Sticks (3 piece),Breakfast,230.0,11.0,2.0,0.0,0.0,260.0,29.0,1.0,8.0,3.0,Burger King,Florida
+French Toast Sticks (5 piece),Breakfast,380.0,18.0,3.0,0.0,0.0,430.0,49.0,2.0,13.0,5.0,Burger King,Florida
+American Cheese (slice),Breakfast,40.0,3.5,2.0,0.0,10.0,180.0,1.0,0.0,0.0,2.0,Burger King,Unknown
+Ketchup (Packet),Breakfast,10.0,0.0,0.0,0.0,0.0,125.0,3.0,0.0,2.0,0.0,Burger King,Unknown
+Mayonnaise (Packet),Breakfast,80.0,9.0,0.5,0.0,10.0,75.0,1.0,0.0,0.0,0.0,Burger King,Unknown
+Strawberry or Grape Jam (packet),Breakfast,30.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0,6.0,0.0,Burger King,Unknown
+Breakfast Syrup (1 oz),Breakfast,120.0,0.0,0.0,0.0,0.0,15.0,30.0,0.0,18.0,0.0,Burger King,Unknown
+Barbecue Dipping Sauce (1 oz),Breakfast,40.0,0.0,0.0,0.0,0.0,310.0,11.0,0.0,10.0,0.0,Burger King,Unknown
+Ranch Dipping Sauce (1 oz),Breakfast,140.0,15.0,2.5,0.0,10.0,85.0,1.0,0.0,1.0,1.0,Burger King,Unknown
+Buffalo Dipping Sauce (1 oz),Breakfast,80.0,8.0,1.5,0.0,5.0,360.0,2.0,0.0,1.0,0.0,Burger King,Unknown
+Zesty Onion Ring Dipping Sauce (1 oz),Breakfast,150.0,15.0,2.5,0.0,20.0,240.0,3.0,0.0,0.0,0.0,Burger King,Unknown
+Honey Mustard Dipping Sauce (1oz),Breakfast,90.0,6.0,1.0,0.0,10.0,180.0,8.0,0.0,7.0,0.0,Burger King,Unknown
+Egg McMuffin,Breakfast,300.0,13.0,5.0,0.0,260.0,750.0,31.0,4.0,3.0,17.0,McDonald's,Washington
+Egg White Delight,Breakfast,250.0,8.0,3.0,0.0,25.0,770.0,30.0,4.0,3.0,18.0,McDonald's,Unknown
+Sausage McMuffin,Breakfast,370.0,23.0,8.0,0.0,45.0,780.0,29.0,4.0,2.0,14.0,McDonald's,Unknown
+Sausage McMuffin with Egg,Breakfast,450.0,28.0,10.0,0.0,285.0,860.0,30.0,4.0,2.0,21.0,McDonald's,Unknown
+Sausage McMuffin with Egg Whites,Breakfast,400.0,23.0,8.0,0.0,50.0,880.0,30.0,4.0,2.0,21.0,McDonald's,Unknown
+Steak & Egg McMuffin,Breakfast,430.0,23.0,9.0,1.0,300.0,960.0,31.0,4.0,3.0,26.0,McDonald's,Washington
+"Bacon, Egg & Cheese Biscuit (Regular Biscuit)",Breakfast,460.0,26.0,13.0,0.0,250.0,1300.0,38.0,2.0,3.0,19.0,McDonald's,Unknown
+"Bacon, Egg & Cheese Biscuit (Large Biscuit)",Breakfast,520.0,30.0,14.0,0.0,250.0,1410.0,43.0,3.0,4.0,19.0,McDonald's,Unknown
+"Bacon, Egg & Cheese Biscuit with Egg Whites (Regular Biscuit)",Breakfast,410.0,20.0,11.0,0.0,35.0,1300.0,36.0,2.0,3.0,20.0,McDonald's,Unknown
+"Bacon, Egg & Cheese Biscuit with Egg Whites (Large Biscuit)",Breakfast,470.0,25.0,12.0,0.0,35.0,1420.0,42.0,3.0,4.0,20.0,McDonald's,Unknown
+Sausage Biscuit (Regular Biscuit),Breakfast,430.0,27.0,12.0,0.0,30.0,1080.0,34.0,2.0,2.0,11.0,McDonald's,Unknown
+Sausage Biscuit (Large Biscuit),Breakfast,480.0,31.0,13.0,0.0,30.0,1190.0,39.0,3.0,3.0,11.0,McDonald's,Unknown
+Sausage Biscuit with Egg (Regular Biscuit),Breakfast,510.0,33.0,14.0,0.0,250.0,1170.0,36.0,2.0,2.0,18.0,McDonald's,Unknown
+Sausage Biscuit with Egg (Large Biscuit),Breakfast,570.0,37.0,15.0,0.0,250.0,1280.0,42.0,3.0,3.0,18.0,McDonald's,Unknown
+Sausage Biscuit with Egg Whites (Regular Biscuit),Breakfast,460.0,27.0,12.0,0.0,35.0,1180.0,34.0,2.0,3.0,18.0,McDonald's,Unknown
+Sausage Biscuit with Egg Whites (Large Biscuit),Breakfast,520.0,32.0,13.0,0.0,35.0,1290.0,40.0,3.0,3.0,18.0,McDonald's,Unknown
+Southern Style Chicken Biscuit (Regular Biscuit),Breakfast,410.0,20.0,8.0,0.0,30.0,1180.0,41.0,2.0,3.0,17.0,McDonald's,Unknown
+Southern Style Chicken Biscuit (Large Biscuit),Breakfast,470.0,24.0,9.0,0.0,30.0,1290.0,46.0,3.0,4.0,17.0,McDonald's,Unknown
+Steak & Egg Biscuit (Regular Biscuit),Breakfast,540.0,32.0,16.0,1.0,280.0,1470.0,38.0,2.0,3.0,25.0,McDonald's,Unknown
+"Bacon, Egg & Cheese McGriddles",Breakfast,460.0,21.0,9.0,0.0,250.0,1250.0,48.0,2.0,15.0,19.0,McDonald's,Unknown
+"Bacon, Egg & Cheese McGriddles with Egg Whites",Breakfast,400.0,15.0,7.0,0.0,35.0,1250.0,47.0,2.0,16.0,20.0,McDonald's,Unknown
+Sausage McGriddles,Breakfast,420.0,22.0,8.0,0.0,35.0,1030.0,44.0,2.0,15.0,11.0,McDonald's,Unknown
+"Sausage, Egg & Cheese McGriddles",Breakfast,550.0,31.0,12.0,0.0,265.0,1320.0,48.0,2.0,15.0,20.0,McDonald's,Unknown
+"Sausage, Egg & Cheese McGriddles with Egg Whites",Breakfast,500.0,26.0,10.0,0.0,50.0,1320.0,46.0,2.0,15.0,21.0,McDonald's,Unknown
+"Bacon, Egg & Cheese Bagel",Breakfast,620.0,31.0,11.0,0.5,275.0,1480.0,57.0,3.0,7.0,30.0,McDonald's,Unknown
+"Bacon, Egg & Cheese Bagel with Egg Whites",Breakfast,570.0,25.0,9.0,0.5,60.0,1480.0,55.0,3.0,8.0,30.0,McDonald's,Unknown
+"Steak, Egg & Cheese Bagel",Breakfast,670.0,35.0,13.0,1.5,295.0,1510.0,56.0,3.0,7.0,33.0,McDonald's,Unknown
+Big Breakfast (Regular Biscuit),Breakfast,740.0,48.0,17.0,0.0,555.0,1560.0,51.0,3.0,3.0,28.0,McDonald's,Unknown
+Big Breakfast (Large Biscuit),Breakfast,800.0,52.0,18.0,0.0,555.0,1680.0,56.0,4.0,3.0,28.0,McDonald's,Unknown
+Big Breakfast with Egg Whites (Regular Biscuit),Breakfast,640.0,37.0,14.0,0.0,35.0,1590.0,50.0,3.0,3.0,26.0,McDonald's,Unknown
+Big Breakfast with Egg Whites (Large Biscuit),Breakfast,690.0,41.0,14.0,0.0,35.0,1700.0,55.0,4.0,4.0,26.0,McDonald's,Unknown
+Big Breakfast with Hotcakes (Regular Biscuit),Breakfast,1090.0,56.0,19.0,0.0,575.0,2150.0,111.0,6.0,17.0,36.0,McDonald's,Unknown
+Big Breakfast with Hotcakes (Large Biscuit),Breakfast,1150.0,60.0,20.0,0.0,575.0,2260.0,116.0,7.0,17.0,36.0,McDonald's,Unknown
+Big Breakfast with Hotcakes and Egg Whites (Regular Biscuit),Breakfast,990.0,46.0,16.0,0.0,55.0,2170.0,110.0,6.0,17.0,35.0,McDonald's,Unknown
+Big Breakfast with Hotcakes and Egg Whites (Large Biscuit),Breakfast,1050.0,50.0,16.0,0.0,55.0,2290.0,115.0,7.0,18.0,35.0,McDonald's,Unknown
+Hotcakes,Breakfast,350.0,9.0,2.0,0.0,20.0,590.0,60.0,3.0,14.0,8.0,McDonald's,Unknown
+Hotcakes and Sausage,Breakfast,520.0,24.0,7.0,0.0,50.0,930.0,61.0,3.0,14.0,15.0,McDonald's,Unknown
+Sausage Burrito,Breakfast,300.0,16.0,7.0,0.0,115.0,790.0,26.0,1.0,2.0,12.0,McDonald's,Unknown
+Hash Brown,Breakfast,150.0,9.0,1.5,0.0,0.0,310.0,15.0,2.0,0.0,1.0,McDonald's,Unknown
+Cinnamon Melts,Breakfast,460.0,19.0,9.0,0.0,15.0,370.0,66.0,3.0,32.0,6.0,McDonald's,Unknown
+Fruit & Maple Oatmeal,Breakfast,290.0,4.0,1.5,0.0,5.0,160.0,58.0,5.0,32.0,5.0,McDonald's,Unknown
+Fruit & Maple Oatmeal without Brown Sugar,Breakfast,260.0,4.0,1.5,0.0,5.0,115.0,49.0,5.0,18.0,5.0,McDonald's,Unknown
+Big Mac,Beef & Pork,530.0,27.0,10.0,1.0,85.0,960.0,47.0,3.0,9.0,24.0,McDonald's,Illinois
+Quarter Pounder with Cheese,Beef & Pork,520.0,26.0,12.0,1.5,95.0,1100.0,41.0,3.0,10.0,30.0,McDonald's,Unknown
+Quarter Pounder with Bacon & Cheese,Beef & Pork,600.0,29.0,13.0,1.5,105.0,1440.0,48.0,3.0,12.0,37.0,McDonald's,Unknown
+Quarter Pounder with Bacon Habanero Ranch,Beef & Pork,610.0,31.0,13.0,1.5,105.0,1180.0,46.0,3.0,10.0,37.0,McDonald's,Unknown
+Quarter Pounder Deluxe,Beef & Pork,540.0,27.0,11.0,1.5,85.0,960.0,45.0,3.0,9.0,29.0,McDonald's,Unknown
+Double Quarter Pounder with Cheese,Beef & Pork,750.0,43.0,19.0,2.5,160.0,1280.0,42.0,3.0,10.0,48.0,McDonald's,Unknown
+Hamburger,Beef & Pork,240.0,8.0,3.0,0.0,30.0,480.0,32.0,1.0,6.0,12.0,McDonald's,Unknown
+Cheeseburger,Beef & Pork,290.0,11.0,5.0,0.5,45.0,680.0,33.0,2.0,7.0,15.0,McDonald's,Massachusetts
+Double Cheeseburger,Beef & Pork,430.0,21.0,10.0,1.0,90.0,1040.0,35.0,2.0,7.0,24.0,McDonald's,Massachusetts
+Bacon Clubhouse Burger,Beef & Pork,720.0,40.0,15.0,1.5,115.0,1470.0,51.0,4.0,14.0,39.0,McDonald's,Unknown
+McDouble,Beef & Pork,380.0,17.0,8.0,1.0,75.0,840.0,34.0,2.0,7.0,22.0,McDonald's,Unknown
+Bacon McDouble,Beef & Pork,440.0,22.0,10.0,1.0,90.0,1110.0,35.0,2.0,7.0,27.0,McDonald's,Unknown
+Daily Double,Beef & Pork,430.0,22.0,9.0,1.0,80.0,760.0,34.0,2.0,7.0,22.0,McDonald's,Unknown
+Jalapeño Double,Beef & Pork,430.0,23.0,9.0,1.0,80.0,1030.0,35.0,2.0,6.0,22.0,McDonald's,Unknown
+McRib,Beef & Pork,500.0,26.0,10.0,0.0,70.0,980.0,44.0,3.0,11.0,22.0,McDonald's,Unknown
+Premium Crispy Chicken Classic Sandwich,Chicken & Fish,510.0,22.0,3.5,0.0,45.0,990.0,55.0,3.0,10.0,24.0,McDonald's,Unknown
+Premium Grilled Chicken Classic Sandwich,Chicken & Fish,350.0,9.0,2.0,0.0,65.0,820.0,42.0,3.0,8.0,28.0,McDonald's,Unknown
+Premium Crispy Chicken Club Sandwich,Chicken & Fish,670.0,33.0,9.0,0.0,85.0,1410.0,58.0,3.0,11.0,36.0,McDonald's,Unknown
+Premium Grilled Chicken Club Sandwich,Chicken & Fish,510.0,20.0,7.0,0.0,105.0,1250.0,44.0,3.0,9.0,40.0,McDonald's,Unknown
+Premium Crispy Chicken Ranch BLT Sandwich,Chicken & Fish,610.0,28.0,6.0,0.0,70.0,1400.0,57.0,3.0,11.0,32.0,McDonald's,Unknown
+Premium Grilled Chicken Ranch BLT Sandwich,Chicken & Fish,450.0,15.0,4.5,0.0,90.0,1230.0,43.0,3.0,9.0,36.0,McDonald's,Unknown
+Bacon Clubhouse Crispy Chicken Sandwich,Chicken & Fish,750.0,38.0,10.0,0.5,90.0,1720.0,65.0,4.0,16.0,36.0,McDonald's,Unknown
+Bacon Clubhouse Grilled Chicken Sandwich,Chicken & Fish,590.0,25.0,8.0,0.0,110.0,1560.0,51.0,4.0,14.0,40.0,McDonald's,Unknown
+Southern Style Crispy Chicken Sandwich,Chicken & Fish,430.0,19.0,3.0,0.0,45.0,910.0,43.0,2.0,7.0,21.0,McDonald's,Unknown
+McChicken,Chicken & Fish,360.0,16.0,3.0,0.0,35.0,800.0,40.0,2.0,5.0,14.0,McDonald's,New York
+Bacon Cheddar McChicken,Chicken & Fish,480.0,24.0,7.0,0.0,65.0,1260.0,43.0,2.0,6.0,22.0,McDonald's,New York
+Bacon Buffalo Ranch McChicken,Chicken & Fish,430.0,21.0,5.0,0.0,50.0,1260.0,41.0,2.0,6.0,20.0,McDonald's,New York
+Buffalo Ranch McChicken,Chicken & Fish,360.0,16.0,3.0,0.0,35.0,990.0,40.0,2.0,5.0,14.0,McDonald's,New York
+Premium McWrap Chicken & Bacon (Crispy Chicken),Chicken & Fish,630.0,32.0,9.0,0.5,80.0,1540.0,56.0,3.0,7.0,32.0,McDonald's,Unknown
+Premium McWrap Chicken & Bacon (Grilled Chicken),Chicken & Fish,480.0,19.0,7.0,0.0,95.0,1370.0,42.0,3.0,6.0,36.0,McDonald's,Unknown
+Premium McWrap Chicken & Ranch (Crispy Chicken),Chicken & Fish,610.0,31.0,8.0,0.5,65.0,1340.0,56.0,3.0,8.0,27.0,McDonald's,Unknown
+Premium McWrap Chicken & Ranch (Grilled Chicken),Chicken & Fish,450.0,18.0,6.0,0.5,80.0,1170.0,42.0,3.0,6.0,30.0,McDonald's,Unknown
+Premium McWrap Southwest Chicken (Crispy Chicken),Chicken & Fish,670.0,33.0,8.0,0.5,60.0,1480.0,68.0,5.0,12.0,27.0,McDonald's,Unknown
+Premium McWrap Southwest Chicken (Grilled Chicken),Chicken & Fish,520.0,20.0,6.0,0.0,80.0,1320.0,55.0,5.0,10.0,31.0,McDonald's,Unknown
+Premium McWrap Chicken Sweet Chili (Crispy Chicken),Chicken & Fish,540.0,23.0,4.5,0.0,50.0,1260.0,61.0,3.0,14.0,23.0,McDonald's,Unknown
+Premium McWrap Chicken Sweet Chili (Grilled Chicken),Chicken & Fish,380.0,10.0,3.0,0.0,65.0,1090.0,47.0,3.0,12.0,27.0,McDonald's,Unknown
+Chicken McNuggets (4 piece),Chicken & Fish,190.0,12.0,2.0,0.0,25.0,360.0,12.0,1.0,0.0,9.0,McDonald's,Texas
+Chicken McNuggets (6 piece),Chicken & Fish,280.0,18.0,3.0,0.0,40.0,540.0,18.0,1.0,0.0,13.0,McDonald's,Texas
+Chicken McNuggets (10 piece),Chicken & Fish,470.0,30.0,5.0,0.0,65.0,900.0,30.0,2.0,0.0,22.0,McDonald's,Texas
+Chicken McNuggets (20 piece),Chicken & Fish,940.0,59.0,10.0,0.0,135.0,1800.0,59.0,3.0,0.0,44.0,McDonald's,Texas
+Chicken McNuggets (40 piece),Chicken & Fish,1880.0,118.0,20.0,1.0,265.0,3600.0,118.0,6.0,1.0,87.0,McDonald's,Texas
+Filet-O-Fish,Chicken & Fish,390.0,19.0,4.0,0.0,40.0,590.0,39.0,2.0,5.0,15.0,McDonald's,Colorado
+Premium Bacon Ranch Salad (without Chicken),Salads,140.0,7.0,3.5,0.0,25.0,300.0,10.0,3.0,4.0,9.0,McDonald's,Unknown
+Premium Bacon Ranch Salad with Crispy Chicken,Salads,380.0,21.0,6.0,0.0,70.0,860.0,22.0,2.0,5.0,25.0,McDonald's,Unknown
+Premium Bacon Ranch Salad with Grilled Chicken,Salads,220.0,8.0,4.0,0.0,85.0,690.0,8.0,2.0,4.0,29.0,McDonald's,Unknown
+Premium Southwest Salad (without Chicken),Salads,140.0,4.5,2.0,0.0,10.0,150.0,20.0,6.0,6.0,6.0,McDonald's,Unknown
+Premium Southwest Salad with Crispy Chicken,Salads,450.0,22.0,4.5,0.0,50.0,850.0,42.0,7.0,12.0,23.0,McDonald's,Unknown
+Premium Southwest Salad with Grilled Chicken,Salads,290.0,8.0,2.5,0.0,70.0,680.0,28.0,7.0,10.0,27.0,McDonald's,Unknown
+Chipotle BBQ Snack Wrap (Crispy Chicken),Snacks & Sides,340.0,15.0,4.5,0.0,30.0,780.0,37.0,1.0,8.0,14.0,McDonald's,Unknown
+Chipotle BBQ Snack Wrap (Grilled Chicken),Snacks & Sides,260.0,8.0,3.5,0.0,40.0,700.0,30.0,1.0,7.0,16.0,McDonald's,Unknown
+Honey Mustard Snack Wrap (Crispy Chicken),Snacks & Sides,330.0,15.0,4.5,0.0,35.0,730.0,34.0,1.0,3.0,14.0,McDonald's,Unknown
+Honey Mustard Snack Wrap (Grilled Chicken),Snacks & Sides,250.0,8.0,3.5,0.0,45.0,650.0,27.0,1.0,2.0,16.0,McDonald's,Unknown
+Ranch Snack Wrap (Crispy Chicken),Snacks & Sides,360.0,20.0,5.0,0.0,40.0,810.0,32.0,1.0,3.0,15.0,McDonald's,Unknown
+Ranch Snack Wrap (Grilled Chicken),Snacks & Sides,280.0,13.0,4.5,0.0,45.0,720.0,25.0,1.0,2.0,16.0,McDonald's,Unknown
+Small French Fries,Snacks & Sides,230.0,11.0,1.5,0.0,0.0,130.0,30.0,2.0,0.0,2.0,McDonald's,California
+Medium French Fries,Snacks & Sides,340.0,16.0,2.5,0.0,0.0,190.0,44.0,4.0,0.0,4.0,McDonald's,California
+Large French Fries,Snacks & Sides,510.0,24.0,3.5,0.0,0.0,290.0,67.0,5.0,0.0,6.0,McDonald's,California
+Kids French Fries,Snacks & Sides,110.0,5.0,1.0,0.0,0.0,65.0,15.0,1.0,0.0,1.0,McDonald's,California
+Side Salad,Snacks & Sides,20.0,0.0,0.0,0.0,0.0,10.0,4.0,1.0,2.0,1.0,McDonald's,Unknown
+Apple Slices,Snacks & Sides,15.0,0.0,0.0,0.0,0.0,0.0,4.0,0.0,3.0,0.0,McDonald's,Unknown
+Fruit 'n Yogurt Parfait,Snacks & Sides,150.0,2.0,1.0,0.0,5.0,70.0,30.0,1.0,23.0,4.0,McDonald's,Unknown
+Baked Apple Pie,Desserts,250.0,13.0,7.0,0.0,0.0,170.0,32.0,4.0,13.0,2.0,McDonald's,Florida
+Chocolate Chip Cookie,Desserts,160.0,8.0,3.5,0.0,10.0,90.0,21.0,1.0,15.0,2.0,McDonald's,Unknown
+Oatmeal Raisin Cookie,Desserts,150.0,6.0,2.5,0.0,10.0,135.0,22.0,1.0,13.0,2.0,McDonald's,Unknown
+Kids Ice Cream Cone,Desserts,45.0,1.5,1.0,0.0,5.0,20.0,7.0,0.0,6.0,1.0,McDonald's,Unknown
+Hot Fudge Sundae,Desserts,330.0,9.0,7.0,0.0,25.0,170.0,53.0,1.0,48.0,8.0,McDonald's,Unknown
+Hot Caramel Sundae,Desserts,340.0,8.0,5.0,0.0,30.0,150.0,60.0,0.0,43.0,7.0,McDonald's,Unknown
+Strawberry Sundae,Desserts,280.0,6.0,4.0,0.0,25.0,85.0,49.0,0.0,45.0,6.0,McDonald's,Unknown
+Coca-Cola Classic (Small),Beverages,140.0,0.0,0.0,0.0,0.0,0.0,39.0,0.0,39.0,0.0,McDonald's,Unknown
+Coca-Cola Classic (Medium),Beverages,200.0,0.0,0.0,0.0,0.0,5.0,55.0,0.0,55.0,0.0,McDonald's,Unknown
+Coca-Cola Classic (Large),Beverages,280.0,0.0,0.0,0.0,0.0,5.0,76.0,0.0,76.0,0.0,McDonald's,Unknown
+Coca-Cola Classic (Child),Beverages,100.0,0.0,0.0,0.0,0.0,0.0,28.0,0.0,28.0,0.0,McDonald's,Unknown
+Diet Coke (Small),Beverages,0.0,0.0,0.0,0.0,0.0,10.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Diet Coke (Medium),Beverages,0.0,0.0,0.0,0.0,0.0,20.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Diet Coke (Large),Beverages,0.0,0.0,0.0,0.0,0.0,35.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Diet Coke (Child),Beverages,0.0,0.0,0.0,0.0,0.0,15.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Dr Pepper (Small),Beverages,140.0,0.0,0.0,0.0,0.0,45.0,37.0,0.0,35.0,0.0,McDonald's,Unknown
+Dr Pepper (Medium),Beverages,190.0,0.0,0.0,0.0,0.0,65.0,53.0,0.0,51.0,0.0,McDonald's,Unknown
+Dr Pepper (Large),Beverages,270.0,0.0,0.0,0.0,0.0,90.0,72.0,0.0,70.0,0.0,McDonald's,Unknown
+Dr Pepper (Child),Beverages,100.0,0.0,0.0,0.0,0.0,30.0,27.0,0.0,26.0,0.0,McDonald's,Unknown
+Diet Dr Pepper (Small),Beverages,0.0,0.0,0.0,0.0,0.0,70.0,0.0,0.0,0.0,2.0,McDonald's,Unknown
+Diet Dr Pepper (Medium),Beverages,0.0,0.0,0.0,0.0,0.0,100.0,0.0,0.0,0.0,3.0,McDonald's,Unknown
+Diet Dr Pepper (Large),Beverages,0.0,0.0,0.0,0.0,0.0,140.0,0.0,0.0,0.0,4.0,McDonald's,Unknown
+Diet Dr Pepper (Child),Beverages,0.0,0.0,0.0,0.0,0.0,50.0,0.0,0.0,0.0,1.0,McDonald's,Unknown
+Sprite (Small),Beverages,140.0,0.0,0.0,0.0,0.0,30.0,37.0,0.0,37.0,0.0,McDonald's,Unknown
+Sprite (Medium),Beverages,200.0,0.0,0.0,0.0,0.0,45.0,54.0,0.0,54.0,0.0,McDonald's,Unknown
+Sprite (Large),Beverages,280.0,0.0,0.0,0.0,0.0,60.0,74.0,0.0,74.0,0.0,McDonald's,Unknown
+Sprite (Child),Beverages,100.0,0.0,0.0,0.0,0.0,25.0,27.0,0.0,27.0,0.0,McDonald's,Unknown
+1% Low Fat Milk Jug,Beverages,100.0,2.5,1.5,0.0,10.0,125.0,12.0,0.0,12.0,8.0,McDonald's,Unknown
+Fat Free Chocolate Milk Jug,Beverages,130.0,0.0,0.0,0.0,5.0,135.0,23.0,1.0,22.0,9.0,McDonald's,Unknown
+Minute Maid 100% Apple Juice Box,Beverages,80.0,0.0,0.0,0.0,0.0,15.0,21.0,0.0,19.0,0.0,McDonald's,Unknown
+Minute Maid Orange Juice (Small),Beverages,150.0,0.0,0.0,0.0,0.0,0.0,34.0,0.0,30.0,2.0,McDonald's,Unknown
+Minute Maid Orange Juice (Medium),Beverages,190.0,0.0,0.0,0.0,0.0,0.0,44.0,0.0,39.0,3.0,McDonald's,Unknown
+Minute Maid Orange Juice (Large),Beverages,280.0,0.0,0.0,0.0,0.0,5.0,65.0,0.0,58.0,4.0,McDonald's,Unknown
+Dasani Water Bottle,Beverages,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Iced Tea (Small),Coffee & Tea,0.0,0.0,0.0,0.0,0.0,10.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Iced Tea (Medium),Coffee & Tea,0.0,0.0,0.0,0.0,0.0,10.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Iced Tea (Large),Coffee & Tea,0.0,0.0,0.0,0.0,0.0,15.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Iced Tea (Child),Coffee & Tea,0.0,0.0,0.0,0.0,0.0,5.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Sweet Tea (Small),Coffee & Tea,150.0,0.0,0.0,0.0,0.0,10.0,36.0,0.0,36.0,1.0,McDonald's,Unknown
+Sweet Tea (Medium),Coffee & Tea,180.0,0.0,0.0,0.0,0.0,10.0,45.0,0.0,45.0,1.0,McDonald's,Unknown
+Sweet Tea (Large),Coffee & Tea,220.0,0.0,0.0,0.0,0.0,10.0,54.0,0.0,54.0,1.0,McDonald's,Unknown
+Sweet Tea (Child),Coffee & Tea,110.0,0.0,0.0,0.0,0.0,5.0,27.0,0.0,27.0,0.0,McDonald's,Unknown
+Coffee (Small),Coffee & Tea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Coffee (Medium),Coffee & Tea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Coffee (Large),Coffee & Tea,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,McDonald's,Unknown
+Latte (Small),Coffee & Tea,170.0,9.0,5.0,0.0,25.0,115.0,15.0,1.0,12.0,9.0,McDonald's,Unknown
+Latte (Medium),Coffee & Tea,210.0,10.0,6.0,0.0,30.0,140.0,18.0,1.0,15.0,11.0,McDonald's,Unknown
+Latte (Large),Coffee & Tea,280.0,14.0,8.0,0.0,40.0,180.0,24.0,1.0,20.0,15.0,McDonald's,Unknown
+Caramel Latte (Small),Coffee & Tea,270.0,9.0,5.0,0.0,25.0,115.0,40.0,1.0,38.0,9.0,McDonald's,Unknown
+Caramel Latte (Medium),Coffee & Tea,340.0,10.0,6.0,0.0,30.0,140.0,50.0,1.0,48.0,11.0,McDonald's,Unknown
+Caramel Latte (Large),Coffee & Tea,430.0,14.0,8.0,0.0,40.0,180.0,62.0,1.0,59.0,15.0,McDonald's,Unknown
+Hazelnut Latte (Small),Coffee & Tea,270.0,9.0,5.0,0.0,25.0,115.0,40.0,1.0,38.0,9.0,McDonald's,Unknown
+Hazelnut Latte (Medium),Coffee & Tea,330.0,10.0,6.0,0.0,30.0,140.0,50.0,1.0,47.0,11.0,McDonald's,Unknown
+Hazelnut Latte (Large),Coffee & Tea,430.0,14.0,8.0,0.0,40.0,180.0,62.0,1.0,58.0,15.0,McDonald's,Unknown
+French Vanilla Latte (Small),Coffee & Tea,260.0,9.0,5.0,0.0,25.0,115.0,38.0,1.0,36.0,9.0,McDonald's,Unknown
+French Vanilla Latte (Medium),Coffee & Tea,330.0,10.0,6.0,0.0,30.0,140.0,48.0,1.0,45.0,11.0,McDonald's,Unknown
+French Vanilla Latte (Large),Coffee & Tea,420.0,14.0,8.0,0.0,40.0,190.0,60.0,1.0,56.0,15.0,McDonald's,Unknown
+Latte with Sugar Free French Vanilla Syrup (Small),Coffee & Tea,210.0,9.0,5.0,0.0,25.0,150.0,24.0,1.0,12.0,9.0,McDonald's,Unknown
+Latte with Sugar Free French Vanilla Syrup (Medium),Coffee & Tea,260.0,10.0,6.0,0.0,30.0,190.0,29.0,1.0,15.0,12.0,McDonald's,Unknown
+Latte with Sugar Free French Vanilla Syrup (Large),Coffee & Tea,330.0,14.0,8.0,0.0,40.0,240.0,37.0,2.0,20.0,15.0,McDonald's,Unknown
+Nonfat Latte (Small),Coffee & Tea,100.0,0.0,0.0,0.0,5.0,110.0,15.0,1.0,13.0,10.0,McDonald's,Unknown
+Nonfat Latte (Medium),Coffee & Tea,130.0,0.0,0.0,0.0,5.0,135.0,19.0,1.0,16.0,12.0,McDonald's,Unknown
+Nonfat Latte (Large),Coffee & Tea,170.0,0.5,0.0,0.0,10.0,180.0,25.0,1.0,21.0,16.0,McDonald's,Unknown
+Nonfat Caramel Latte (Small),Coffee & Tea,200.0,0.0,0.0,0.0,5.0,110.0,41.0,1.0,39.0,10.0,McDonald's,Unknown
+Nonfat Caramel Latte (Medium),Coffee & Tea,250.0,0.0,0.0,0.0,5.0,135.0,51.0,1.0,48.0,12.0,McDonald's,Unknown
+Nonfat Caramel Latte (Large),Coffee & Tea,310.0,0.5,0.0,0.0,10.0,180.0,63.0,1.0,59.0,16.0,McDonald's,Unknown
+Nonfat Hazelnut Latte (Small),Coffee & Tea,200.0,0.0,0.0,0.0,5.0,110.0,40.0,1.0,38.0,10.0,McDonald's,Unknown
+Nonfat Hazelnut Latte (Medium),Coffee & Tea,250.0,0.0,0.0,0.0,5.0,135.0,51.0,1.0,48.0,12.0,McDonald's,Unknown
+Nonfat Hazelnut Latte (Large),Coffee & Tea,310.0,0.5,0.0,0.0,10.0,180.0,63.0,1.0,59.0,16.0,McDonald's,Unknown
+Nonfat French Vanilla Latte (Small),Coffee & Tea,190.0,0.0,0.0,0.0,5.0,115.0,39.0,1.0,37.0,10.0,McDonald's,Unknown
+Nonfat French Vanilla Latte (Medium),Coffee & Tea,240.0,0.0,0.0,0.0,5.0,140.0,49.0,1.0,46.0,12.0,McDonald's,Unknown
+Nonfat French Vanilla Latte (Large),Coffee & Tea,300.0,0.5,0.0,0.0,10.0,180.0,60.0,1.0,56.0,16.0,McDonald's,Unknown
+Nonfat Latte with Sugar Free French Vanilla Syrup (Small),Coffee & Tea,140.0,0.0,0.0,0.0,5.0,150.0,24.0,1.0,13.0,10.0,McDonald's,Unknown
+Nonfat Latte with Sugar Free French Vanilla Syrup (Medium),Coffee & Tea,170.0,0.0,0.0,0.0,5.0,180.0,30.0,1.0,16.0,12.0,McDonald's,Unknown
+Nonfat Latte with Sugar Free French Vanilla Syrup (Large),Coffee & Tea,220.0,0.5,0.0,0.0,10.0,240.0,38.0,2.0,21.0,16.0,McDonald's,Unknown
+Mocha (Small),Coffee & Tea,340.0,11.0,7.0,0.0,35.0,150.0,49.0,2.0,42.0,10.0,McDonald's,Unknown
+Mocha (Medium),Coffee & Tea,410.0,14.0,8.0,0.0,40.0,190.0,60.0,2.0,53.0,13.0,McDonald's,Unknown
+Mocha (Large),Coffee & Tea,500.0,17.0,10.0,0.5,50.0,240.0,72.0,2.0,63.0,16.0,McDonald's,Unknown
+Mocha with Nonfat Milk (Small),Coffee & Tea,270.0,3.5,2.0,0.0,15.0,150.0,49.0,2.0,43.0,11.0,McDonald's,Unknown
+Mocha with Nonfat Milk (Medium),Coffee & Tea,330.0,3.5,2.0,0.0,15.0,190.0,60.0,2.0,53.0,13.0,McDonald's,Unknown
+Mocha with Nonfat Milk (Large),Coffee & Tea,390.0,4.0,2.5,0.0,20.0,240.0,73.0,2.0,64.0,17.0,McDonald's,Unknown
+Caramel Mocha (Small),Coffee & Tea,320.0,11.0,7.0,0.0,35.0,170.0,45.0,1.0,40.0,10.0,McDonald's,Unknown
+Caramel Mocha (Medium),Coffee & Tea,390.0,14.0,8.0,0.5,40.0,220.0,55.0,1.0,50.0,12.0,McDonald's,Unknown
+Caramel Mocha (Large),Coffee & Tea,480.0,17.0,10.0,0.5,50.0,270.0,66.0,1.0,60.0,16.0,McDonald's,Unknown
+Nonfat Caramel Mocha (Small),Coffee & Tea,250.0,3.5,2.0,0.0,15.0,170.0,45.0,1.0,41.0,10.0,McDonald's,Unknown
+Nonfat Caramel Mocha (Medium),Coffee & Tea,310.0,3.5,2.0,0.0,15.0,210.0,56.0,1.0,51.0,13.0,McDonald's,Unknown
+Nonfat Caramel Mocha (Large),Coffee & Tea,370.0,3.5,2.5,0.0,20.0,270.0,67.0,1.0,61.0,17.0,McDonald's,Unknown
+Hot Chocolate (Small),Coffee & Tea,360.0,13.0,8.0,0.0,40.0,180.0,50.0,1.0,45.0,11.0,McDonald's,Unknown
+Hot Chocolate (Medium),Coffee & Tea,440.0,16.0,9.0,0.5,50.0,220.0,61.0,1.0,56.0,14.0,McDonald's,Unknown
+Hot Chocolate (Large),Coffee & Tea,540.0,20.0,12.0,0.5,60.0,280.0,73.0,1.0,68.0,17.0,McDonald's,Unknown
+Hot Chocolate with Nonfat Milk (Small),Coffee & Tea,280.0,3.5,2.0,0.0,15.0,180.0,50.0,1.0,46.0,12.0,McDonald's,Unknown
+Hot Chocolate with Nonfat Milk (Medium),Coffee & Tea,340.0,3.5,2.0,0.0,15.0,220.0,61.0,1.0,57.0,14.0,McDonald's,Unknown
+Hot Chocolate with Nonfat Milk (Large),Coffee & Tea,400.0,3.5,2.5,0.0,20.0,280.0,74.0,1.0,69.0,19.0,McDonald's,Unknown
+Regular Iced Coffee (Small),Coffee & Tea,140.0,4.5,3.0,0.0,15.0,35.0,23.0,0.0,22.0,1.0,McDonald's,Unknown
+Regular Iced Coffee (Medium),Coffee & Tea,190.0,7.0,4.5,0.0,25.0,50.0,31.0,0.0,30.0,1.0,McDonald's,Unknown
+Regular Iced Coffee (Large),Coffee & Tea,270.0,9.0,6.0,0.0,35.0,75.0,47.0,0.0,45.0,2.0,McDonald's,Unknown
+Caramel Iced Coffee (Small),Coffee & Tea,130.0,4.5,3.0,0.0,15.0,35.0,22.0,0.0,21.0,1.0,McDonald's,Unknown
+Caramel Iced Coffee (Medium),Coffee & Tea,180.0,7.0,4.5,0.0,25.0,50.0,29.0,0.0,28.0,1.0,McDonald's,Unknown
+Caramel Iced Coffee (Large),Coffee & Tea,260.0,9.0,6.0,0.0,35.0,65.0,43.0,0.0,42.0,2.0,McDonald's,Unknown
+Hazelnut Iced Coffee (Small),Coffee & Tea,130.0,4.5,3.0,0.0,15.0,35.0,21.0,0.0,20.0,1.0,McDonald's,Unknown
+Hazelnut Iced Coffee (Medium),Coffee & Tea,180.0,7.0,4.5,0.0,25.0,50.0,29.0,0.0,28.0,1.0,McDonald's,Unknown
+Hazelnut Iced Coffee (Large),Coffee & Tea,250.0,9.0,6.0,0.0,35.0,75.0,43.0,0.0,41.0,2.0,McDonald's,Unknown
+French Vanilla Iced Coffee (Small),Coffee & Tea,120.0,4.5,3.0,0.0,15.0,40.0,20.0,0.0,19.0,1.0,McDonald's,Unknown
+French Vanilla Iced Coffee (Medium),Coffee & Tea,170.0,7.0,4.5,0.0,25.0,55.0,27.0,0.0,26.0,1.0,McDonald's,Unknown
+French Vanilla Iced Coffee (Large),Coffee & Tea,240.0,9.0,6.0,0.0,35.0,80.0,41.0,0.0,39.0,2.0,McDonald's,Unknown
+Iced Coffee with Sugar Free French Vanilla Syrup (Small),Coffee & Tea,80.0,4.5,3.0,0.0,15.0,65.0,9.0,0.0,1.0,1.0,McDonald's,Unknown
+Iced Coffee with Sugar Free French Vanilla Syrup (Medium),Coffee & Tea,120.0,7.0,4.5,0.0,25.0,90.0,12.0,0.0,2.0,1.0,McDonald's,Unknown
+Iced Coffee with Sugar Free French Vanilla Syrup (Large),Coffee & Tea,160.0,9.0,6.0,0.0,35.0,135.0,18.0,0.0,2.0,2.0,McDonald's,Unknown
+Iced Mocha (Small),Coffee & Tea,290.0,11.0,7.0,0.0,35.0,125.0,41.0,1.0,34.0,8.0,McDonald's,Unknown
+Iced Mocha (Medium),Coffee & Tea,350.0,13.0,8.0,0.0,40.0,150.0,50.0,1.0,43.0,9.0,McDonald's,Unknown
+Iced Mocha (Large),Coffee & Tea,480.0,16.0,10.0,0.5,50.0,220.0,70.0,2.0,62.0,14.0,McDonald's,Unknown
+Iced Mocha with Nonfat Milk (Small),Coffee & Tea,240.0,5.0,3.0,0.0,20.0,125.0,41.0,1.0,35.0,8.0,McDonald's,Unknown
+Iced Mocha with Nonfat Milk (Medium),Coffee & Tea,290.0,5.0,3.5,0.0,20.0,150.0,50.0,1.0,43.0,10.0,McDonald's,Unknown
+Iced Mocha with Nonfat Milk (Large),Coffee & Tea,390.0,6.0,3.5,0.0,25.0,220.0,71.0,2.0,62.0,14.0,McDonald's,Unknown
+Iced Caramel Mocha (Small),Coffee & Tea,280.0,11.0,7.0,0.0,35.0,140.0,38.0,0.0,33.0,8.0,McDonald's,Unknown
+Iced Caramel Mocha (Medium),Coffee & Tea,340.0,13.0,7.0,0.0,40.0,170.0,46.0,1.0,41.0,9.0,McDonald's,Unknown
+Iced Caramel Mocha (Large),Coffee & Tea,460.0,16.0,10.0,0.5,50.0,250.0,65.0,1.0,59.0,13.0,McDonald's,Unknown
+Iced Nonfat Caramel Mocha (Small),Coffee & Tea,230.0,5.0,3.0,0.0,20.0,140.0,38.0,0.0,33.0,8.0,McDonald's,Unknown
+Iced Nonfat Caramel Mocha (Medium),Coffee & Tea,270.0,5.0,3.0,0.0,20.0,170.0,47.0,1.0,41.0,10.0,McDonald's,Unknown
+Iced Nonfat Caramel Mocha (Large),Coffee & Tea,370.0,6.0,3.5,0.0,25.0,250.0,65.0,1.0,59.0,14.0,McDonald's,Unknown
+Frappé Mocha (Small),Coffee & Tea,450.0,18.0,12.0,1.0,65.0,125.0,65.0,1.0,57.0,7.0,McDonald's,Unknown
+Frappé Mocha (Medium),Coffee & Tea,550.0,22.0,14.0,1.0,75.0,160.0,80.0,1.0,71.0,9.0,McDonald's,Unknown
+Frappé Mocha (Large),Coffee & Tea,670.0,26.0,17.0,1.0,90.0,190.0,98.0,1.0,88.0,11.0,McDonald's,Unknown
+Frappé Caramel (Small),Coffee & Tea,450.0,19.0,12.0,1.0,65.0,125.0,64.0,0.0,57.0,7.0,McDonald's,Unknown
+Frappé Caramel (Medium),Coffee & Tea,550.0,23.0,15.0,1.0,80.0,160.0,79.0,0.0,71.0,9.0,McDonald's,Unknown
+Frappé Caramel (Large),Coffee & Tea,670.0,27.0,17.0,1.5,95.0,190.0,96.0,0.0,88.0,11.0,McDonald's,Unknown
+Frappé Chocolate Chip (Small),Coffee & Tea,530.0,23.0,14.0,1.0,65.0,135.0,76.0,1.0,67.0,8.0,McDonald's,Unknown
+Frappé Chocolate Chip (Medium),Coffee & Tea,630.0,26.0,17.0,1.0,80.0,160.0,91.0,1.0,81.0,9.0,McDonald's,Unknown
+Frappé Chocolate Chip (Large),Coffee & Tea,760.0,31.0,20.0,1.5,95.0,200.0,111.0,1.0,99.0,12.0,McDonald's,Unknown
+Blueberry Pomegranate Smoothie (Small),Smoothies & Shakes,220.0,0.5,0.0,0.0,5.0,40.0,50.0,3.0,44.0,2.0,McDonald's,Unknown
+Blueberry Pomegranate Smoothie (Medium),Smoothies & Shakes,260.0,1.0,0.0,0.0,5.0,50.0,62.0,4.0,54.0,3.0,McDonald's,Unknown
+Blueberry Pomegranate Smoothie (Large),Smoothies & Shakes,340.0,1.0,0.5,0.0,5.0,65.0,79.0,5.0,70.0,4.0,McDonald's,Unknown
+Strawberry Banana Smoothie (Small),Smoothies & Shakes,210.0,0.5,0.0,0.0,5.0,50.0,47.0,3.0,44.0,3.0,McDonald's,Unknown
+Strawberry Banana Smoothie (Medium),Smoothies & Shakes,250.0,1.0,0.0,0.0,5.0,60.0,58.0,3.0,54.0,4.0,McDonald's,Unknown
+Strawberry Banana Smoothie (Large),Smoothies & Shakes,330.0,1.0,0.5,0.0,5.0,80.0,74.0,4.0,70.0,5.0,McDonald's,Unknown
+Mango Pineapple Smoothie (Small),Smoothies & Shakes,210.0,0.5,0.0,0.0,5.0,40.0,50.0,1.0,46.0,2.0,McDonald's,Unknown
+Mango Pineapple Smoothie (Medium),Smoothies & Shakes,260.0,1.0,0.0,0.0,5.0,45.0,61.0,1.0,56.0,3.0,McDonald's,Unknown
+Mango Pineapple Smoothie (Large),Smoothies & Shakes,340.0,1.0,0.5,0.0,5.0,60.0,78.0,2.0,72.0,4.0,McDonald's,Unknown
+Vanilla Shake (Small),Smoothies & Shakes,530.0,15.0,10.0,1.0,60.0,160.0,86.0,0.0,63.0,11.0,McDonald's,Unknown
+Vanilla Shake (Medium),Smoothies & Shakes,660.0,19.0,12.0,1.0,75.0,200.0,109.0,0.0,81.0,14.0,McDonald's,Unknown
+Vanilla Shake (Large),Smoothies & Shakes,820.0,23.0,15.0,1.0,90.0,260.0,135.0,0.0,101.0,18.0,McDonald's,Unknown
+Strawberry Shake (Small),Smoothies & Shakes,550.0,16.0,10.0,1.0,60.0,160.0,90.0,0.0,79.0,12.0,McDonald's,Unknown
+Strawberry Shake (Medium),Smoothies & Shakes,690.0,20.0,13.0,1.0,75.0,210.0,114.0,0.0,100.0,15.0,McDonald's,Unknown
+Strawberry Shake (Large),Smoothies & Shakes,850.0,24.0,15.0,1.0,90.0,260.0,140.0,0.0,123.0,18.0,McDonald's,Unknown
+Chocolate Shake (Small),Smoothies & Shakes,560.0,16.0,10.0,1.0,60.0,240.0,91.0,1.0,77.0,12.0,McDonald's,Unknown
+Chocolate Shake (Medium),Smoothies & Shakes,700.0,20.0,12.0,1.0,75.0,300.0,114.0,2.0,97.0,15.0,McDonald's,Unknown
+Chocolate Shake (Large),Smoothies & Shakes,850.0,23.0,15.0,1.0,85.0,380.0,141.0,2.0,120.0,19.0,McDonald's,Unknown
+Shamrock Shake (Medium),Smoothies & Shakes,660.0,19.0,12.0,1.0,75.0,210.0,109.0,0.0,93.0,14.0,McDonald's,Unknown
+Shamrock Shake (Large),Smoothies & Shakes,820.0,23.0,15.0,1.0,90.0,260.0,135.0,0.0,115.0,18.0,McDonald's,Unknown
+McFlurry with M&M’s Candies (Small),Smoothies & Shakes,650.0,23.0,14.0,0.5,50.0,180.0,96.0,1.0,89.0,13.0,McDonald's,Georgia
+McFlurry with M&M’s Candies (Medium),Smoothies & Shakes,930.0,33.0,20.0,1.0,75.0,260.0,139.0,2.0,128.0,20.0,McDonald's,Georgia
+McFlurry with M&M’s Candies (Snack),Smoothies & Shakes,430.0,15.0,10.0,0.0,35.0,120.0,64.0,1.0,59.0,9.0,McDonald's,Georgia
+McFlurry with Oreo Cookies (Small),Smoothies & Shakes,510.0,17.0,9.0,0.5,45.0,280.0,80.0,1.0,64.0,12.0,McDonald's,Georgia
+McFlurry with Oreo Cookies (Medium),Smoothies & Shakes,690.0,23.0,12.0,1.0,55.0,380.0,106.0,1.0,85.0,15.0,McDonald's,Georgia
+McFlurry with Oreo Cookies (Snack),Smoothies & Shakes,340.0,11.0,6.0,0.0,30.0,190.0,53.0,1.0,43.0,8.0,McDonald's,Georgia
+McFlurry with Reese's Peanut Butter Cups (Medium),Smoothies & Shakes,810.0,32.0,15.0,1.0,60.0,400.0,114.0,2.0,103.0,21.0,McDonald's,Georgia
+McFlurry with Reese's Peanut Butter Cups (Snack),Smoothies & Shakes,410.0,16.0,8.0,0.0,30.0,200.0,57.0,1.0,51.0,10.0,McDonald's,Georgia

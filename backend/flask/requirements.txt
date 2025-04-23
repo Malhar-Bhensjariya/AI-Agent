@@ -12,3 +12,6 @@ numpy==1.26.3
 langchain-core==0.1.23
 tqdm==4.66.1  # For progress bars in data processing
 xlrd==2.0.1   # For legacy Excel file support
+langchain
+google-generativeai
+python-dotenv

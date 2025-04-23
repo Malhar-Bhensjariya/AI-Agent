@@ -12,7 +12,7 @@ export default function App() {
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
       <BrowserRouter>
         <nav className="p-4 border-b flex justify-between items-center bg-white dark:bg-gray-800">
-          <h1 className="text-xl font-bold">DARA</h1>
+          <h1 className="text-xl font-bold"></h1>
           <button 
             onClick={() => setDarkMode(!darkMode)}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
