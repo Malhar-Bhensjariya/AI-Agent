@@ -43,23 +43,30 @@ aida/
 │   ├── public/
 │   │   └── index.html
 │   ├── src/
-│   │   ├── assets/                         # Images, logos, icons
+│   │   ├── assets/     
 │   │   ├── components/
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── AgentCard.jsx
-│   │   │   ├── TaskTimeline.jsx
-│   │   │   └── UploadBox.jsx
-│   │   ├── pages/
-│   │   │   ├── Home.jsx
-│   │   │   ├── Agents.jsx
-│   │   │   ├── ExploreDoc.jsx              # RAG/CAG UI interface
-│   │   │   └── Dashboard.jsx
+│   │   │   ├── layout/ 
+│   │   │   │   └── Sidebar.jsx
+│   │   │   ├── chat/ 
+│   │   │   │   ├── ChatBox.jsx
+│   │   │   │   └── MessageBubble.jsx
+│   │   │   ├── table/
+│   │   │   │   └── TableView.jsx
+│   │   │   ├── chart/
+│   │   │   │   └── ChartView.jsx
+│   │   │   └── common/
+│   │   │       ├── Loader.jsx
+│   │   │       └── ToggleSwitch.jsx
+│   │   ├── context/
+│   │   │   └── AppContext.js
 │   │   ├── hooks/
+│   │   │   ├── useAgentResponse.jsx
 │   │   │   └── useUploadTask.js
+│   │   ├── pages/
+│   │   │   ├── HomePage.jsx
+│   │   │   └── LandingPage.jsx
 │   │   ├── services/
-│   │   │   ├── api.js
-│   │   │   ├── taskService.js
-│   │   │   └── docService.js
+│   │   │   └── api.js
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   ├── vite.config.js

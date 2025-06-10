@@ -2,58 +2,79 @@ from langchain_core.tools import tool
 from flask_app.tools.plot_generator import PlotGenerator
 from flask_app.utils.file_handler import load_file_as_dataframe
 from flask_app.utils.logger import log
+import json
 
 @tool
-def create_bar_plot(file_path: str, x_column: str, y_column: str, save_path: str = None) -> str:
-    """Create a bar plot using two columns (categorical x-axis, numeric y-axis)."""
+def create_bar_plot(file_path: str, x_column: str, y_column: str) -> str:
+    """Create an interactive bar plot configuration using two columns (categorical x-axis, numeric y-axis)."""
     try:
         df = load_file_as_dataframe(file_path)
         plot_generator = PlotGenerator(df)
-        result = plot_generator.generate_bar_plot(x_column, y_column, save_path)
-        log(f"Bar plot created for {x_column} vs {y_column} from {file_path}", "INFO")
-        return result
+        chart_config = plot_generator.generate_bar_plot(x_column, y_column)
+        log(f"Interactive bar plot configuration created for {x_column} vs {y_column} from {file_path}", "INFO")
+        
+        # Return structured response for the agent
+        return f"Bar plot configuration generated successfully for '{y_column}' vs '{x_column}'. Chart data: {chart_config}"
     except Exception as e:
         error_msg = f"Error creating bar plot: {str(e)}"
         log(error_msg, "ERROR")
         return error_msg
 
 @tool
-def create_line_plot(file_path: str, x_column: str, y_column: str, save_path: str = None) -> str:
-    """Create a line plot using two numeric columns."""
+def create_line_plot(file_path: str, x_column: str, y_column: str) -> str:
+    """Create an interactive line plot configuration using two numeric columns."""
     try:
         df = load_file_as_dataframe(file_path)
         plot_generator = PlotGenerator(df)
-        result = plot_generator.generate_line_plot(x_column, y_column, save_path)
-        log(f"Line plot created for {x_column} vs {y_column} from {file_path}", "INFO")
-        return result
+        chart_config = plot_generator.generate_line_plot(x_column, y_column)
+        log(f"Interactive line plot configuration created for {x_column} vs {y_column} from {file_path}", "INFO")
+        
+        return f"Line plot configuration generated successfully for '{y_column}' vs '{x_column}'. Chart data: {chart_config}"
     except Exception as e:
         error_msg = f"Error creating line plot: {str(e)}"
         log(error_msg, "ERROR")
         return error_msg
 
 @tool
-def create_pie_chart(file_path: str, column_name: str, save_path: str = None, max_categories: int = 10) -> str:
-    """Create a pie chart showing the distribution of a categorical column's values."""
+def create_scatter_plot(file_path: str, x_column: str, y_column: str) -> str:
+    """Create an interactive scatter plot configuration using two numeric columns."""
     try:
         df = load_file_as_dataframe(file_path)
         plot_generator = PlotGenerator(df)
-        result = plot_generator.generate_pie_chart(column_name, save_path, max_categories)
-        log(f"Pie chart created for {column_name} from {file_path}", "INFO")
-        return result
+        chart_config = plot_generator.generate_scatter_plot(x_column, y_column)
+        log(f"Interactive scatter plot configuration created for {x_column} vs {y_column} from {file_path}", "INFO")
+        
+        return f"Scatter plot configuration generated successfully for '{y_column}' vs '{x_column}'. Chart data: {chart_config}"
+    except Exception as e:
+        error_msg = f"Error creating scatter plot: {str(e)}"
+        log(error_msg, "ERROR")
+        return error_msg
+
+@tool
+def create_pie_chart(file_path: str, column_name: str, max_categories: int = 10) -> str:
+    """Create an interactive pie chart configuration showing the distribution of a categorical column's values."""
+    try:
+        df = load_file_as_dataframe(file_path)
+        plot_generator = PlotGenerator(df)
+        chart_config = plot_generator.generate_pie_chart(column_name, max_categories=max_categories)
+        log(f"Interactive pie chart configuration created for {column_name} from {file_path}", "INFO")
+        
+        return f"Pie chart configuration generated successfully for '{column_name}'. Chart data: {chart_config}"
     except Exception as e:
         error_msg = f"Error creating pie chart: {str(e)}"
         log(error_msg, "ERROR")
         return error_msg
 
 @tool
-def create_histogram(file_path: str, column_name: str, bins: int = 30, save_path: str = None) -> str:
-    """Create a histogram showing the distribution of a numeric column's values."""
+def create_histogram(file_path: str, column_name: str, bins: int = 30) -> str:
+    """Create an interactive histogram configuration showing the distribution of a numeric column's values."""
     try:
         df = load_file_as_dataframe(file_path)
         plot_generator = PlotGenerator(df)
-        result = plot_generator.generate_histogram(column_name, bins, save_path)
-        log(f"Histogram created for {column_name} from {file_path}", "INFO")
-        return result
+        chart_config = plot_generator.generate_histogram(column_name, bins)
+        log(f"Interactive histogram configuration created for {column_name} from {file_path}", "INFO")
+        
+        return f"Histogram configuration generated successfully for '{column_name}'. Chart data: {chart_config}"
     except Exception as e:
         error_msg = f"Error creating histogram: {str(e)}"
         log(error_msg, "ERROR")
@@ -101,7 +122,8 @@ def get_data_summary_for_plotting(file_path: str) -> str:
                 unique_count = df[col].nunique()
                 summary += f"• '{col}': {unique_count} unique values\n"
                 if unique_count <= 10:
-                    summary += f"  Values: {', '.join(map(str, df[col].value_counts().head().index.tolist()))}\n"
+                    sample_values = df[col].value_counts().head().index.tolist()
+                    summary += f"  Sample values: {', '.join(map(str, sample_values))}\n"
         
         # Add info about numeric columns
         if numeric_cols:
@@ -118,13 +140,102 @@ def get_data_summary_for_plotting(file_path: str) -> str:
         log(error_msg, "ERROR")
         return error_msg
 
+@tool
+def create_multi_series_chart(file_path: str, x_column: str, y_columns: list, chart_type: str = "line") -> str:
+    """Create an interactive multi-series chart configuration with multiple y-columns."""
+    try:
+        df = load_file_as_dataframe(file_path)
+        
+        # Validate columns
+        missing_cols = [col for col in [x_column] + y_columns if col not in df.columns]
+        if missing_cols:
+            raise ValueError(f"Columns {missing_cols} not found in data. Available columns: {list(df.columns)}")
+        
+        # Sort by x column
+        df_sorted = df.sort_values(x_column)
+        
+        # Limit data points for performance
+        if len(df_sorted) > 1000:
+            log(f"Warning: Too many data points ({len(df_sorted)}), sampling 1000 points", "WARNING")
+            step = len(df_sorted) // 1000
+            df_sorted = df_sorted.iloc[::step]
+        
+        # Prepare data
+        labels = [str(val) for val in df_sorted[x_column]]
+        
+        # Colors for different series
+        colors = ['#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+        
+        datasets = []
+        for i, y_col in enumerate(y_columns):
+            color = colors[i % len(colors)]
+            dataset = {
+                'label': y_col,
+                'data': [float(val) if pd.notna(val) else None for val in df_sorted[y_col]],
+                'borderColor': color,
+                'backgroundColor': color + '20' if chart_type == 'line' else color,
+                'borderWidth': 2 if chart_type == 'line' else 1,
+                'fill': False if chart_type == 'line' else True
+            }
+            datasets.append(dataset)
+        
+        chart_config = {
+            'type': chart_type,
+            'data': {
+                'labels': labels,
+                'datasets': datasets
+            },
+            'options': {
+                'responsive': True,
+                'maintainAspectRatio': False,
+                'plugins': {
+                    'title': {
+                        'display': True,
+                        'text': f'{chart_type.title()} Chart: {", ".join(y_columns)} vs {x_column}'
+                    },
+                    'legend': {
+                        'display': True
+                    }
+                },
+                'scales': {
+                    'x': {
+                        'title': {
+                            'display': True,
+                            'text': x_column
+                        }
+                    },
+                    'y': {
+                        'title': {
+                            'display': True,
+                            'text': 'Values'
+                        }
+                    }
+                },
+                'interaction': {
+                    'intersect': False,
+                    'mode': 'index'
+                }
+            }
+        }
+        
+        chart_config_json = json.dumps(chart_config)
+        log(f"Multi-series {chart_type} chart configuration created for {y_columns} vs {x_column} from {file_path}", "INFO")
+        
+        return f"Multi-series {chart_type} chart configuration generated successfully. Chart data: {chart_config_json}"
+    except Exception as e:
+        error_msg = f"Error creating multi-series chart: {str(e)}"
+        log(error_msg, "ERROR")
+        return error_msg
+
 def get_visualization_tools():
     """Return all available visualization tools."""
     return [
         create_bar_plot,
         create_line_plot,
+        create_scatter_plot,
         create_pie_chart,
         create_histogram,
+        create_multi_series_chart,
         get_plot_recommendations,
         get_data_summary_for_plotting
     ]

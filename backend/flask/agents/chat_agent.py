@@ -3,7 +3,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from flask_app.utils.logger import log
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class ChatAgentExecutor:
     def __init__(self):

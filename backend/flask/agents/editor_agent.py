@@ -4,6 +4,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from flask_app.services.df_operator import get_csv_tools
 from flask_app.utils.logger import log
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class CSVAgentExecutor:
     def __init__(self):
