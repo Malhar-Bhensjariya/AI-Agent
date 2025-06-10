@@ -22,8 +22,8 @@ export default function App() {
         </nav>
 
         <Routes>
-          <Route path="/" element={<LandingPage darkMode={darkMode} />} />
-          <Route path="/chat" element={<ChatPage darkMode={darkMode} />} />
+          <Route path="/landing" element={<LandingPage darkMode={darkMode} />} />
+          <Route path="/" element={<ChatPage darkMode={darkMode} />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Routes>
