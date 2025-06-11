@@ -3,13 +3,13 @@ import { useAppContext } from '../context/AppContext'
 import { sendMessage } from '../services/api'
 
 export const useAgentResponse = () => {
-  const { dispatch } = useAppContext()
+  const { addMessage, setTableView, setError, clearError } = useAppContext()
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setLocalError] = useState(null)
 
   const sendAgentMessage = async (message, filePath = null) => {
     setIsLoading(true)
-    setError(null)
+    setLocalError(null)
 
     try {
       // Call the updated API service
@@ -27,16 +27,17 @@ export const useAgentResponse = () => {
       }
 
       // Add agent response to messages
-      dispatch({ type: 'ADD_MESSAGE', payload: agentMessage })
+      addMessage(agentMessage)
 
       // Show table view if response contains table data or if explicitly requested
       if (response.showTable || response.show_table || agentMessage.tableData) {
-        dispatch({ type: 'SET_TABLE_VIEW', payload: true })
+        setTableView(true)
       }
 
       return response
     } catch (err) {
       const errorMessage = err.message || 'An error occurred while processing your request'
+      setLocalError(errorMessage)
       setError(errorMessage)
       
       // Add error message to chat
@@ -48,8 +49,7 @@ export const useAgentResponse = () => {
         error: true
       }
       
-      dispatch({ type: 'ADD_MESSAGE', payload: errorChatMessage })
-      dispatch({ type: 'SET_ERROR', payload: errorMessage })
+      addMessage(errorChatMessage)
       
       throw err
     } finally {
@@ -63,7 +63,7 @@ export const useAgentResponse = () => {
     }
 
     setIsLoading(true)
-    setError(null)
+    setLocalError(null)
 
     try {
       // Call API again with the same message
@@ -82,16 +82,17 @@ export const useAgentResponse = () => {
       }
 
       // Add regenerated response to messages
-      dispatch({ type: 'ADD_MESSAGE', payload: regeneratedMessage })
+      addMessage(regeneratedMessage)
 
       // Show table view if needed
       if (response.showTable || response.show_table || regeneratedMessage.tableData) {
-        dispatch({ type: 'SET_TABLE_VIEW', payload: true })
+        setTableView(true)
       }
 
       return response
     } catch (err) {
       const errorMessage = err.message || 'Failed to regenerate response'
+      setLocalError(errorMessage)
       setError(errorMessage)
       
       const errorChatMessage = {
@@ -102,8 +103,7 @@ export const useAgentResponse = () => {
         error: true
       }
       
-      dispatch({ type: 'ADD_MESSAGE', payload: errorChatMessage })
-      dispatch({ type: 'SET_ERROR', payload: errorMessage })
+      addMessage(errorChatMessage)
       
       throw err
     } finally {
@@ -111,15 +111,15 @@ export const useAgentResponse = () => {
     }
   }
 
-  const clearError = () => {
-    setError(null)
-    dispatch({ type: 'CLEAR_ERROR' })
+  const clearAgentError = () => {
+    setLocalError(null)
+    clearError()
   }
 
   return {
     sendMessage: sendAgentMessage,
     regenerateResponse,
-    clearError,
+    clearError: clearAgentError,
     isLoading,
     error
   }

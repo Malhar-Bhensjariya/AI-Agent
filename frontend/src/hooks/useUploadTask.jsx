@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { uploadFile as uploadFileAPI, formatFileSize } from '../services/api'
+import { uploadFile as uploadFileAPI } from '../services/api'
 import { useAppContext } from '../context/AppContext'
 
 export const useUploadTask = () => {
-  const { dispatch } = useAppContext()
+  const { setCurrentFile, setError, clearError, updateTableData } = useAppContext()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [error, setError] = useState(null)
+  const [error, setLocalError] = useState(null)
 
   const uploadFile = async (file) => {
     if (!file) {
@@ -35,7 +35,7 @@ export const useUploadTask = () => {
     }
 
     setIsUploading(true)
-    setError(null)
+    setLocalError(null)
     setUploadProgress(0)
 
     try {
@@ -44,7 +44,7 @@ export const useUploadTask = () => {
         setUploadProgress(Math.round(progress))
       })
 
-      // Create file info object
+      // Create file info object with enhanced data handling
       const fileInfo = {
         id: response.file_id || response.fileId || Date.now(),
         name: file.name,
@@ -54,20 +54,26 @@ export const useUploadTask = () => {
         uploadedAt: new Date().toISOString(),
         status: 'uploaded',
         preview: response.preview || null,
-        summary: response.summary || null
+        summary: response.summary || null,
+        tableData: response.table_data || response.tableData || response.preview || null
       }
 
-      // Update context with current file
-      dispatch({ type: 'SET_CURRENT_FILE', payload: fileInfo })
+      // Update context with current file (this will automatically update table data)
+      setCurrentFile(fileInfo)
+
+      // If we have table data from the upload response, update it
+      if (fileInfo.tableData) {
+        updateTableData(fileInfo.tableData)
+      }
 
       // Clear any previous errors
-      dispatch({ type: 'CLEAR_ERROR' })
+      clearError()
 
       return fileInfo
     } catch (err) {
       const errorMessage = err.message || 'Upload failed'
+      setLocalError(errorMessage)
       setError(errorMessage)
-      dispatch({ type: 'SET_ERROR', payload: errorMessage })
       throw err
     } finally {
       setIsUploading(false)
@@ -98,8 +104,8 @@ export const useUploadTask = () => {
   }
 
   const removeFile = () => {
-    dispatch({ type: 'CLEAR_CURRENT_FILE' })
-    setError(null)
+    setCurrentFile(null)
+    setLocalError(null)
     setUploadProgress(0)
   }
 
@@ -113,9 +119,17 @@ export const useUploadTask = () => {
     }
   }
 
-  const clearError = () => {
-    setError(null)
-    dispatch({ type: 'CLEAR_ERROR' })
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const clearUploadError = () => {
+    setLocalError(null)
+    clearError()
   }
 
   return {
@@ -124,7 +138,7 @@ export const useUploadTask = () => {
     validateFileExtension,
     removeFile,
     getFilePreview,
-    clearError,
+    clearError: clearUploadError,
     formatFileSize,
     isUploading,
     uploadProgress,

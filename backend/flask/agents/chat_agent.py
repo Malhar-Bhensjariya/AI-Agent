@@ -54,14 +54,21 @@ Remember to be helpful while keeping the conversation natural and enjoyable!""")
         # Create the chain with output parser
         self.chain = self.prompt | self.llm | StrOutputParser()
 
-    def execute(self, question: str) -> str:
-        """Execute a conversational query"""
+    def execute(self, question: str, file_path: str = None) -> str:
+        """Execute a conversational query with optional file context"""
         try:
             log(f"Chat Agent - User Input: {question}", "INFO")
             
+            # If file_path is provided, add context about file availability
+            if file_path:
+                context_input = f"Note: User has uploaded a file at {file_path}. If they ask about data analysis, let them know they should use specific data analysis commands.\n\nUser message: {question}"
+                log(f"Chat Agent - Processing with file context: {file_path}", "INFO")
+            else:
+                context_input = question
+            
             # Generate response using the chain
             response = self.chain.invoke({
-                "input": question
+                "input": context_input
             })
             
             log(f"Chat Agent - Response Generated: {len(response)} characters", "INFO")

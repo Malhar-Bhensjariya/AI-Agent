@@ -2,12 +2,12 @@ import React from 'react'
 import { useAppContext } from '../../context/AppContext'
 
 const Sidebar = () => {
-  const { chats, currentChat, createNewChat, dispatch, user, logout } = useAppContext()
+  const { chats, currentChat, createNewChat, setCurrentChat, setMessages, user, logout } = useAppContext()
 
   const selectChat = (chat) => {
-    dispatch({ type: 'SET_CURRENT_CHAT', payload: chat })
+    setCurrentChat(chat)
     // Load messages for this chat
-    dispatch({ type: 'SET_MESSAGES', payload: [] }) // Replace with actual message loading
+    setMessages([]) // Replace with actual message loading
   }
 
   return (

@@ -5,7 +5,7 @@ import { useAgentResponse } from '../../hooks/useAgentResponse'
 import { useUploadTask } from '../../hooks/useUploadTask'
 
 const ChatBox = () => {
-  const { messages, currentChat, dispatch, loading, error } = useAppContext()
+  const { messages, currentChat, loading, error,addMessage, clearMessages, clearCurrentFile } = useAppContext()
   const [inputMessage, setInputMessage] = useState('')
   const [uploadedFile, setUploadedFile] = useState(null)
   const fileInputRef = useRef(null)
@@ -44,7 +44,7 @@ const ChatBox = () => {
     }
 
     // Add user message to chat
-    dispatch({ type: 'ADD_MESSAGE', payload: newMessage })
+    addMessage(newMessage)
     
     // Clear input immediately for better UX
     setInputMessage('')
@@ -90,8 +90,8 @@ const ChatBox = () => {
   }
 
   const clearChat = () => {
-    dispatch({ type: 'CLEAR_MESSAGES' })
-    dispatch({ type: 'CLEAR_CURRENT_FILE' })
+    clearMessages()
+    clearCurrentFile()
     setUploadedFile(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''

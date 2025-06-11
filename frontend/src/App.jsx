@@ -8,7 +8,7 @@ function App() {
 
   return (
     <div className="App">
-      {isLoggedIn ? <HomePage /> : <LandingPage />}
+      {true ? <HomePage /> : <LandingPage />}
     </div>
   )
 }

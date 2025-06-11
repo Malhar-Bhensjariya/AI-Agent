@@ -1,193 +1,212 @@
-import React, { createContext, useContext, useState, useReducer } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 
+// Create context
 const AppContext = createContext()
 
-const initialState = {
-  // Current session state
-  messages: [],
-  currentFile: null, // Currently uploaded file info
-  
-  // UI state
-  isTableViewVisible: false,
-  loading: false,
-  error: null,
-  
-  // Future chat history (when Node.js backend is added)
-  currentChat: null,
-  chats: [],
-  
-  // Authentication (future)
-  user: null
-}
+// Context provider component
+export const AppProvider = ({ children }) => {
+  // Core state using useState hooks
+  const [messages, setMessages] = useState([])
+  const [currentFile, setCurrentFile] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [tableData, setTableData] = useState(null)
+  const [chartData, setChartData] = useState(null)
+  const [analysis, setAnalysis] = useState(null)
+  const [currentChat, setCurrentChat] = useState(null)
+  const [chats, setChats] = useState([])
+  const [user, setUser] = useState(null)
 
-function appReducer(state, action) {
-  switch (action.type) {
-    // Message management
-    case 'ADD_MESSAGE':
-      return { 
-        ...state, 
-        messages: [...state.messages, action.payload],
-        error: null // Clear any previous errors when adding message
-      }
-    case 'SET_MESSAGES':
-      return { ...state, messages: action.payload }
-    case 'CLEAR_MESSAGES':
-      return { ...state, messages: [] }
-    
-    // File management
-    case 'SET_CURRENT_FILE':
-      return { ...state, currentFile: action.payload }
-    case 'CLEAR_CURRENT_FILE':
-      return { ...state, currentFile: null }
-    
-    // UI state
-    case 'TOGGLE_TABLE_VIEW':
-      return { ...state, isTableViewVisible: !state.isTableViewVisible }
-    case 'SET_TABLE_VIEW':
-      return { ...state, isTableViewVisible: action.payload }
-    case 'SET_LOADING':
-      return { ...state, loading: action.payload }
-    case 'SET_ERROR':
-      return { ...state, error: action.payload }
-    case 'CLEAR_ERROR':
-      return { ...state, error: null }
-    
-    // Future chat history features
-    case 'SET_CURRENT_CHAT':
-      return { ...state, currentChat: action.payload }
-    case 'ADD_CHAT':
-      return { ...state, chats: [...state.chats, action.payload] }
-    case 'UPDATE_CHAT':
-      return { 
-        ...state, 
-        chats: state.chats.map(chat => 
-          chat.id === action.payload.id ? { ...chat, ...action.payload.updates } : chat
-        )
-      }
-    case 'DELETE_CHAT':
-      return { 
-        ...state, 
-        chats: state.chats.filter(chat => chat.id !== action.payload),
-        currentChat: state.currentChat?.id === action.payload ? null : state.currentChat
-      }
-    
-    // Authentication (future)
-    case 'SET_USER':
-      return { ...state, user: action.payload }
-    
-    default:
-      return state
-  }
-}
-
-export function AppProvider({ children }) {
-  const [state, dispatch] = useReducer(appReducer, initialState)
-  const [isLoggedIn, setIsLoggedIn] = useState(true)  //For now true so we can develop easily without authentication
-
-  // Authentication functions (future)
-  const login = (userData) => {
-    setIsLoggedIn(true)
-    dispatch({ type: 'SET_USER', payload: userData })
-  }
-
-  const logout = () => {
-    setIsLoggedIn(false)
-    dispatch({ type: 'SET_USER', payload: null })
-    // Clear session data on logout
-    dispatch({ type: 'CLEAR_MESSAGES' })
-    dispatch({ type: 'CLEAR_CURRENT_FILE' })
-  }
-
-  // Current session management
+  // Enhanced message functions
   const addMessage = (message) => {
     const messageWithId = {
-      id: Date.now() + Math.random(), // Ensure unique ID
+      id: Date.now() + Math.random(),
       timestamp: new Date().toISOString(),
       ...message
     }
-    dispatch({ type: 'ADD_MESSAGE', payload: messageWithId })
+    setMessages(prev => [...prev, messageWithId])
+    setError(null)
   }
 
-  const clearSession = () => {
-    dispatch({ type: 'CLEAR_MESSAGES' })
-    dispatch({ type: 'CLEAR_CURRENT_FILE' })
-    dispatch({ type: 'CLEAR_ERROR' })
+  const updateMessage = (id, updates) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === id ? { ...msg, ...updates } : msg
+    ))
   }
 
-  const setCurrentFile = (fileInfo) => {
-    dispatch({ type: 'SET_CURRENT_FILE', payload: fileInfo })
+  const deleteMessage = (id) => {
+    setMessages(prev => prev.filter(msg => msg.id !== id))
   }
 
-  // Future chat history functions
+  const clearMessages = () => {
+    setMessages([])
+    setError(null)
+  }
+
+  // Enhanced file functions
+  const setActiveFile = (file) => {
+    setCurrentFile(file)
+    // When a new file is set, update table data if available
+    if (file && file.tableData) {
+      setTableData(file.tableData)
+    } else if (file && file.preview) {
+      // If file has preview data, use that for table
+      setTableData(file.preview)
+    } else {
+      // Clear table data if no file data available
+      setTableData(null)
+    }
+  }
+
+  const clearCurrentFile = () => {
+    setCurrentFile(null)
+    setTableData(null)
+  }
+
+  // Enhanced UI functions
+  const clearError = () => setError(null)
+
+  // Enhanced data functions - always update table data for active file
+  const updateTableData = (data) => {
+    setTableData(data)
+    // Also update the current file's table data if available
+    if (currentFile) {
+      setCurrentFile(prev => ({
+        ...prev,
+        tableData: data
+      }))
+    }
+  }
+
+  const updateChartData = (data) => setChartData(data)
+
+  // Enhanced chat functions
   const createNewChat = () => {
     const newChat = {
-      id: Date.now(),
+      id: Date.now() + Math.random(),
       title: 'New Chat',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
-    dispatch({ type: 'ADD_CHAT', payload: newChat })
-    dispatch({ type: 'SET_CURRENT_CHAT', payload: newChat })
-    dispatch({ type: 'SET_MESSAGES', payload: [] })
+    setChats(prev => [...prev, newChat])
+    setCurrentChat(newChat)
+    clearMessages()
+    return newChat
+  }
+
+  const updateChat = (id, updates) => {
+    setChats(prev => prev.map(chat => 
+      chat.id === id ? { ...chat, ...updates } : chat
+    ))
   }
 
   const updateChatTitle = (chatId, title) => {
-    dispatch({ 
-      type: 'UPDATE_CHAT', 
-      payload: { id: chatId, updates: { title } }
-    })
+    updateChat(chatId, { title, updatedAt: new Date().toISOString() })
   }
 
-  // Error and loading helpers
-  const setLoading = (loading) => {
-    dispatch({ type: 'SET_LOADING', payload: loading })
+  const deleteChat = (id) => {
+    setChats(prev => prev.filter(chat => chat.id !== id))
+    if (currentChat?.id === id) setCurrentChat(null)
   }
 
-  const setError = (error) => {
-    dispatch({ type: 'SET_ERROR', payload: error })
+  // Session management
+  const clearSession = () => {
+    clearMessages()
+    clearError()
   }
 
-  const clearError = () => {
-    dispatch({ type: 'CLEAR_ERROR' })
+  const clearAll = () => {
+    clearSession()
+    setChartData(null)
+    setAnalysis(null)
+    // Don't clear current file and table data - keep them persistent
   }
 
-  const value = {
+  // Auth functions
+  const login = (userData) => setUser(userData)
+  
+  const logout = () => {
+    setUser(null)
+    clearAll()
+    clearCurrentFile() // Only clear file on logout
+  }
+
+  // Context value
+  const contextValue = {
     // State
-    ...state,
-    isLoggedIn,
+    messages,
+    currentChat,
+    currentFile,
+    loading,
+    error,
+    tableData,
+    chartData,
+    analysis,
+    chats,
+    user,
     
-    // Authentication (future)
-    login,
-    logout,
-    
-    // Current session management
+    // Functions
     addMessage,
-    clearSession,
-    setCurrentFile,
-    
-    // Future chat history
-    createNewChat,
-    updateChatTitle,
-    
-    // UI helpers
+    updateMessage,
+    deleteMessage,
+    setMessages,
+    clearMessages,
+    setCurrentFile: setActiveFile, // Use the enhanced version
+    clearCurrentFile,
     setLoading,
     setError,
     clearError,
-    
-    // Raw dispatch for complex operations
-    dispatch
+    updateTableData,
+    updateChartData,
+    setAnalysis,
+    setCurrentChat,
+    createNewChat,
+    updateChat,
+    updateChatTitle,
+    deleteChat,
+    clearSession,
+    clearAll,
+    login,
+    logout,
+    setUser
   }
 
   return (
-    <AppContext.Provider value={value}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   )
 }
 
-export function useAppContext() {
+// Custom hook to use the context
+export const useAppContext = () => {
   const context = useContext(AppContext)
   if (!context) {
     throw new Error('useAppContext must be used within an AppProvider')
   }
   return context
 }
+
+// Action types export for backward compatibility (if needed)
+export const ActionTypes = {
+  ADD_MESSAGE: 'ADD_MESSAGE',
+  UPDATE_MESSAGE: 'UPDATE_MESSAGE',
+  DELETE_MESSAGE: 'DELETE_MESSAGE',
+  SET_MESSAGES: 'SET_MESSAGES',
+  CLEAR_MESSAGES: 'CLEAR_MESSAGES',
+  SET_CURRENT_FILE: 'SET_CURRENT_FILE',
+  CLEAR_CURRENT_FILE: 'CLEAR_CURRENT_FILE',
+  SET_LOADING: 'SET_LOADING',
+  SET_ERROR: 'SET_ERROR',
+  CLEAR_ERROR: 'CLEAR_ERROR',
+  SET_TABLE_DATA: 'SET_TABLE_DATA',
+  SET_CHART_DATA: 'SET_CHART_DATA',
+  SET_ANALYSIS: 'SET_ANALYSIS',
+  SET_CURRENT_CHAT: 'SET_CURRENT_CHAT',
+  ADD_CHAT: 'ADD_CHAT',
+  UPDATE_CHAT: 'UPDATE_CHAT',
+  DELETE_CHAT: 'DELETE_CHAT',
+  SET_USER: 'SET_USER'
+}
+
+export default AppContext

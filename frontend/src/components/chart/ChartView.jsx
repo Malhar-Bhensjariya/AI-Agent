@@ -47,18 +47,37 @@ const ChartView = ({ data, type = 'bar' }) => {
 
       const ctx = canvasRef.current.getContext('2d')
       
-      // Handle different data formats from backend
       let chartConfig
       
-      if (data.chartConfig) {
-        // Backend sends complete Chart.js configuration
-        chartConfig = data.chartConfig
+      // Handle JSON string response from Python backend
+      if (typeof data === 'string') {
+        try {
+          chartConfig = JSON.parse(data)
+        } catch (parseError) {
+          throw new Error('Invalid JSON format from backend')
+        }
+      } else if (data.chartConfig) {
+        // Handle if data is wrapped in chartConfig property
+        if (typeof data.chartConfig === 'string') {
+          chartConfig = JSON.parse(data.chartConfig)
+        } else {
+          chartConfig = data.chartConfig
+        }
       } else if (data.config) {
         // Alternative config field
-        chartConfig = data.config
+        if (typeof data.config === 'string') {
+          chartConfig = JSON.parse(data.config)
+        } else {
+          chartConfig = data.config
+        }
       } else {
         // Build config from raw data
         chartConfig = buildChartConfig(data, type)
+      }
+
+      // Validate chart config structure
+      if (!chartConfig || typeof chartConfig !== 'object') {
+        throw new Error('Invalid chart configuration')
       }
 
       // Ensure we have required Chart.js structure
@@ -66,7 +85,24 @@ const ChartView = ({ data, type = 'bar' }) => {
         chartConfig.type = type
       }
 
-      // Add responsive options and default styling
+      // Handle tooltip callbacks that come as strings from Python
+      if (chartConfig.options?.plugins?.tooltip?.callbacks) {
+        const callbacks = chartConfig.options.plugins.tooltip.callbacks
+        Object.keys(callbacks).forEach(key => {
+          if (typeof callbacks[key] === 'string') {
+            try {
+              // Convert string function to actual function
+              // This handles the tooltip callback from pie charts
+              callbacks[key] = new Function('context', `return ${callbacks[key].replace('function(context)', '')}`)
+            } catch (e) {
+              // If conversion fails, remove the callback
+              delete callbacks[key]
+            }
+          }
+        })
+      }
+
+      // Enhance options with responsive settings
       chartConfig.options = {
         responsive: true,
         maintainAspectRatio: false,
@@ -77,7 +113,8 @@ const ChartView = ({ data, type = 'bar' }) => {
         plugins: {
           legend: {
             display: true,
-            position: 'top'
+            position: chartConfig.type === 'pie' || chartConfig.type === 'doughnut' ? 'right' : 'top',
+            ...chartConfig.options?.plugins?.legend
           },
           tooltip: {
             enabled: true,
@@ -85,8 +122,10 @@ const ChartView = ({ data, type = 'bar' }) => {
             titleColor: '#ffffff',
             bodyColor: '#ffffff',
             borderColor: '#ffffff',
-            borderWidth: 1
-          }
+            borderWidth: 1,
+            ...chartConfig.options?.plugins?.tooltip
+          },
+          ...chartConfig.options?.plugins
         },
         ...chartConfig.options
       }
@@ -109,10 +148,10 @@ const ChartView = ({ data, type = 'bar' }) => {
     }
   }, [data, type])
 
-  // Build Chart.js config from raw data
+  // Build Chart.js config from raw data (fallback)
   const buildChartConfig = (rawData, chartType) => {
     if (!rawData.labels || !rawData.datasets) {
-      throw new Error('Invalid chart data format')
+      throw new Error('Invalid chart data format - missing labels or datasets')
     }
 
     const config = {
@@ -265,12 +304,18 @@ const ChartView = ({ data, type = 'bar' }) => {
           <svg className="w-12 h-12 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
-          <p className="text-red-600 text-center">
+          <p className="text-red-600 text-center font-medium">
             Failed to render chart
           </p>
           <p className="text-red-500 text-sm text-center mt-1">
             {error}
           </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-md text-sm hover:bg-red-200 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     )
@@ -293,34 +338,11 @@ const ChartView = ({ data, type = 'bar' }) => {
   }
 
   return (
-    <div className="chart-container bg-white rounded-lg p-4 border border-gray-200">
-      {/* Chart Title */}
-      {(data.title || data.chartTitle) && (
-        <div className="mb-4">
-          <h4 className="text-lg font-semibold text-gray-800">
-            {data.title || data.chartTitle}
-          </h4>
-          {(data.subtitle || data.description) && (
-            <p className="text-sm text-gray-600 mt-1">
-              {data.subtitle || data.description}
-            </p>
-          )}
-        </div>
-      )}
-
+    <div className="chart-container bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
       {/* Chart Canvas */}
-      <div className="relative" style={{ height: '300px' }}>
+      <div className="relative" style={{ height: '400px' }}>
         <canvas ref={canvasRef} />
       </div>
-
-      {/* Chart Footer */}
-      {data.footer && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <p className="text-xs text-gray-500 text-center">
-            {data.footer}
-          </p>
-        </div>
-      )}
     </div>
   )
 }

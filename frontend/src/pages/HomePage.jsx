@@ -5,26 +5,22 @@ import ChatBox from '../components/chat/ChatBox'
 import TableView from '../components/table/TableView'
 
 const HomePage = () => {
-  const { isTableViewVisible } = useAppContext()
-
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <Sidebar />
       
-      {/* Main Content Area */}
+      {/* Main Content Area - Always split between chat and table */}
       <div className="flex-1 flex">
-        {/* Chat Area */}
-        <div className={`${isTableViewVisible ? 'w-1/2' : 'w-full'} flex flex-col transition-all duration-300`}>
+        {/* Chat Area - Always takes half the width */}
+        <div className="w-1/2 flex flex-col">
           <ChatBox />
         </div>
         
-        {/* Table View - appears on the right when visible */}
-        {isTableViewVisible && (
-          <div className="w-1/2 border-l border-gray-300">
-            <TableView />
-          </div>
-        )}
+        {/* Table View - Always visible, takes other half */}
+        <div className="w-1/2">
+          <TableView />
+        </div>
       </div>
     </div>
   )
