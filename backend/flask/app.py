@@ -4,9 +4,9 @@ import os
 import json
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from flask_app.agents.agent_executor import execute_agent
-from flask_app.utils.file_handler import save_uploaded_file, allowed_file
-from flask_app.utils.logger import log
+from agents.agent_executor import execute_agent
+from tools.file_handler import save_uploaded_file, allowed_file
+from utils.logger import log
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -15,11 +15,9 @@ CORS(app)  # Enable CORS for frontend integration
 # Configuration
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
-app.config['STATIC_FOLDER'] = os.path.join(os.path.dirname(__file__), 'static')
 
-# Ensure upload directories exist
+# Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(os.path.join(app.config['STATIC_FOLDER'], 'plots'), exist_ok=True)
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -32,11 +30,10 @@ def health_check():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """
-    Upload CSV/Excel files
-    Returns: file_path for use in subsequent requests
+    Upload CSV/Excel files for chat analysis
+    Returns: file_path for use in chat messages
     """
     try:
-        # Check if file is in request
         if 'file' not in request.files:
             return jsonify({
                 "success": False,
@@ -51,7 +48,6 @@ def upload_file():
                 "error": "No file selected"
             }), 400
 
-        # Validate file type
         if not allowed_file(file.filename):
             return jsonify({
                 "success": False,
@@ -76,12 +72,6 @@ def upload_file():
             "error": "File too large. Maximum size is 50MB"
         }), 413
     
-    except ValueError as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 400
-    
     except Exception as e:
         log(f"Upload error: {str(e)}", "ERROR")
         return jsonify({
@@ -89,14 +79,14 @@ def upload_file():
             "error": f"Upload failed: {str(e)}"
         }), 500
 
-@app.route('/message', methods=['POST'])
-def process_message():
+@app.route('/chat', methods=['POST'])
+def chat():
     """
-    Main endpoint for processing user messages
-    Handles all agent types and returns appropriate responses
+    Main chat endpoint - handles all user messages and agent routing
+    Accepts: message, optional file_path
+    Returns: Complex response (text, chart config, files, etc.)
     """
     try:
-        # Parse request data
         data = request.get_json()
         
         if not data:
@@ -105,79 +95,74 @@ def process_message():
                 "error": "No JSON data provided"
             }), 400
 
-        file_path = data.get('file_path')
-        user_prompt = data.get('message', '').strip()
+        user_message = data.get('message', '').strip()
+        file_path = data.get('file_path')  # Optional
 
-        # Validate required fields
-        if not file_path:
+        if not user_message:
             return jsonify({
                 "success": False,
-                "error": "file_path is required"
+                "error": "Message is required"
             }), 400
 
-        if not user_prompt:
-            return jsonify({
-                "success": False,
-                "error": "message is required"
-            }), 400
-
-        # Validate file exists
-        if not os.path.exists(file_path):
+        # Validate file exists if provided
+        if file_path and not os.path.exists(file_path):
             return jsonify({
                 "success": False,
                 "error": f"File not found: {file_path}"
             }), 404
 
-        log(f"Processing message: '{user_prompt}' for file: {file_path}", "INFO")
+        log(f"Processing chat message: '{user_message}'" + (f" with file: {file_path}" if file_path else ""), "INFO")
 
-        # Execute agent
-        result = execute_agent(file_path=file_path, user_prompt=user_prompt)
+        # Execute agent (backend handles which agent to use)
+        result = execute_agent(file_path=file_path, user_prompt=user_message)
         
-        # Determine response type based on content
+        # Parse the response and determine type
         response_data = {
             "success": True,
-            "message": user_prompt,
-            "file_path": file_path
+            "message": user_message
         }
 
-        # Check if result is JSON (chart configuration)
+        # Add file info if present
+        if file_path:
+            response_data["file_path"] = file_path
+
+        # Determine response type based on result
         if _is_json_string(result):
             try:
+                # Try to parse as chart configuration
                 chart_config = json.loads(result)
                 response_data.update({
-                    "response_type": "visualization",
+                    "type": "chart",
                     "chart_config": chart_config,
-                    "text_response": "Chart generated successfully"
+                    "text": "Chart generated from your data"
                 })
-                log("Visualization response generated", "INFO")
+                log("Chart response generated", "INFO")
             except json.JSONDecodeError:
                 # If JSON parsing fails, treat as text
                 response_data.update({
-                    "response_type": "text",
-                    "text_response": result
+                    "type": "text",
+                    "text": result
                 })
         else:
-            # Text response (from editor, transform, or chat agents)
+            # Regular text response
             response_data.update({
-                "response_type": "text", 
-                "text_response": result
+                "type": "text", 
+                "text": result
             })
             log("Text response generated", "INFO")
 
         return jsonify(response_data)
 
     except Exception as e:
-        log(f"Message processing error: {str(e)}", "ERROR")
+        log(f"Chat processing error: {str(e)}", "ERROR")
         return jsonify({
             "success": False,
             "error": f"Processing failed: {str(e)}"
         }), 500
 
 @app.route('/files/<path:filename>', methods=['GET'])
-def serve_uploaded_file(filename):
-    """
-    Serve uploaded files (for download or preview)
-    """
+def serve_file(filename):
+    """Serve uploaded files when needed"""
     try:
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
     except FileNotFoundError:
@@ -185,74 +170,6 @@ def serve_uploaded_file(filename):
             "success": False,
             "error": "File not found"
         }), 404
-
-@app.route('/files', methods=['GET'])
-def list_uploaded_files():
-    """
-    List all uploaded files
-    """
-    try:
-        files = []
-        upload_dir = app.config['UPLOAD_FOLDER']
-        
-        if os.path.exists(upload_dir):
-            for filename in os.listdir(upload_dir):
-                if allowed_file(filename):
-                    file_path = os.path.join(upload_dir, filename)
-                    file_stats = os.stat(file_path)
-                    files.append({
-                        "filename": filename,
-                        "file_path": file_path,
-                        "size": file_stats.st_size,
-                        "modified": file_stats.st_mtime
-                    })
-        
-        return jsonify({
-            "success": True,
-            "files": files
-        })
-    
-    except Exception as e:
-        log(f"Error listing files: {str(e)}", "ERROR")
-        return jsonify({
-            "success": False,
-            "error": f"Failed to list files: {str(e)}"
-        }), 500
-
-@app.route('/file-info', methods=['POST'])
-def get_file_info():
-    """
-    Get basic information about an uploaded file
-    """
-    try:
-        data = request.get_json()
-        file_path = data.get('file_path')
-        
-        if not file_path or not os.path.exists(file_path):
-            return jsonify({
-                "success": False,
-                "error": "Invalid file path"
-            }), 400
-
-        # Use DataEditor to get file preview and summary
-        from flask_app.tools.df_editor import DataEditor
-        
-        editor = DataEditor(file_path)
-        preview = editor.get_preview(n=5)
-        summary = editor.get_summary()
-        
-        return jsonify({
-            "success": True,
-            "preview": preview,
-            "summary": summary
-        })
-    
-    except Exception as e:
-        log(f"Error getting file info: {str(e)}", "ERROR")
-        return jsonify({
-            "success": False,
-            "error": f"Failed to get file info: {str(e)}"
-        }), 500
 
 # Helper functions
 def _is_json_string(text: str) -> bool:
@@ -264,7 +181,6 @@ def _is_json_string(text: str) -> bool:
     if not text:
         return False
         
-    # Quick check for JSON-like structure
     if not ((text.startswith('{') and text.endswith('}')) or 
             (text.startswith('[') and text.endswith(']'))):
         return False

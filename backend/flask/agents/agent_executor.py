@@ -1,9 +1,9 @@
-from flask_app.agents.editor_agent import CSVAgentExecutor as EditorAgent
-from flask_app.agents.data_transform_agent import DataTransformAgentExecutor as TransformAgentExecutor
-from flask_app.agents.visualization_agent import VisualizationAgentExecutor
-from flask_app.agents.chat_agent import ChatAgentExecutor
-from flask_app.agents.tool_selector import detect_agent_type
-from flask_app.utils.logger import log
+from agents.editor_agent import CSVAgentExecutor as EditorAgent
+from agents.data_transform_agent import DataTransformAgentExecutor as TransformAgentExecutor
+from agents.visualization_agent import VisualizationAgentExecutor
+from agents.chat_agent import ChatAgentExecutor
+from agents.tool_selector import detect_agent_type
+from utils.logger import log
 
 # Central registry for easy mapping
 AGENT_REGISTRY = {

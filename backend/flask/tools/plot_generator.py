@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import json
-from flask_app.utils.logger import log
+from utils.logger import log
 
 class PlotGenerator:
     def __init__(self, df: pd.DataFrame):

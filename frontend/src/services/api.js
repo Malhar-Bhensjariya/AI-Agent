@@ -1,15 +1,15 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+const FLASK_URL = import.meta.env.VITE_FLASK_API || 'http://localhost:5000'
 
 // Helper function to handle API responses
 const handleResponse = async (response) => {
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
-    throw new Error(error.message || `HTTP error! status: ${response.status}`)
+    throw new Error(error.error || error.message || `HTTP error! status: ${response.status}`)
   }
   return response.json()
 }
 
-// Helper function to get auth headers
+// Helper function to get auth headers (for future Node.js backend)
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken')
   return {
@@ -18,101 +18,16 @@ const getAuthHeaders = () => {
   }
 }
 
-// Authentication APIs
-export const authAPI = {
-  login: async (credentials) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials)
-    })
-    return handleResponse(response)
-  },
+// =============================================================================
+// CURRENT FLASK APIs - Core Chat Functionality
+// =============================================================================
 
-  register: async (userData) => {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
-    })
-    return handleResponse(response)
-  },
-
-  logout: async () => {
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    })
-    return handleResponse(response)
-  }
-}
-
-// Chat APIs
-export const chatAPI = {
-  getChats: async () => {
-    const response = await fetch(`${API_BASE_URL}/chats`, {
-      headers: getAuthHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  createChat: async (chatData) => {
-    const response = await fetch(`${API_BASE_URL}/chats`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(chatData)
-    })
-    return handleResponse(response)
-  },
-
-  getChat: async (chatId) => {
-    const response = await fetch(`${API_BASE_URL}/chats/${chatId}`, {
-      headers: getAuthHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  updateChat: async (chatId, updates) => {
-    const response = await fetch(`${API_BASE_URL}/chats/${chatId}`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(updates)
-    })
-    return handleResponse(response)
-  },
-
-  deleteChat: async (chatId) => {
-    const response = await fetch(`${API_BASE_URL}/chats/${chatId}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders()
-    })
-    return handleResponse(response)
-  }
-}
-
-// Message APIs
-export const messageAPI = {
-  getMessages: async (chatId) => {
-    const response = await fetch(`${API_BASE_URL}/chats/${chatId}/messages`, {
-      headers: getAuthHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  sendMessage: async (chatId, messageData) => {
-    const response = await fetch(`${API_BASE_URL}/chats/${chatId}/messages`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(messageData)
-    })
-    return handleResponse(response)
-  }
-}
-
-// File upload API
-export const uploadFile = async (formData, onProgress) => {
+// Upload file for chat analysis
+export const uploadFile = async (file, onProgress) => {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
+    const formData = new FormData()
+    formData.append('file', file)
     
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable) {
@@ -130,84 +45,195 @@ export const uploadFile = async (formData, onProgress) => {
           reject(new Error('Invalid response format'))
         }
       } else {
-        reject(new Error(`Upload failed with status: ${xhr.status}`))
+        try {
+          const errorResponse = JSON.parse(xhr.responseText)
+          reject(new Error(errorResponse.error || `Upload failed with status: ${xhr.status}`))
+        } catch (e) {
+          reject(new Error(`Upload failed with status: ${xhr.status}`))
+        }
       }
     })
 
     xhr.addEventListener('error', () => {
-      reject(new Error('Upload failed'))
+      reject(new Error('Upload failed - network error'))
     })
 
-    const token = localStorage.getItem('authToken')
-    xhr.open('POST', `${API_BASE_URL}/upload`)
-    if (token) {
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`)
-    }
-    
+    xhr.open('POST', `${FLASK_URL}/upload`)
     xhr.send(formData)
   })
 }
 
-// Agent API
-export const sendMessageToAgent = async (data) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/agent/chat`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data)
-    })
-    return handleResponse(response)
-  } catch (error) {
-    // Mock response for development
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          text: `I received your message: "${data.message}". ${data.file ? `And I can see you uploaded a file: ${data.file.name}` : ''}`,
-          chartData: Math.random() > 0.5 ? {
-            title: 'Sample Chart',
-            type: 'bar',
-            description: 'This is a sample chart generated from your data'
-          } : null,
-          showTable: Math.random() > 0.7
-        })
-      }, 1000 + Math.random() * 2000)
-    })
+// Send message in chat (main chat functionality)
+export const sendMessage = async (message, filePath = null) => {
+  const payload = { message }
+  if (filePath) {
+    payload.file_path = filePath
   }
+
+  const response = await fetch(`${FLASK_URL}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  return handleResponse(response)
 }
 
-// Data analysis APIs
-export const dataAPI = {
-  analyzeData: async (fileId, analysisType) => {
-    const response = await fetch(`${API_BASE_URL}/data/analyze`, {
+// Health check
+export const healthCheck = async () => {
+  const response = await fetch(`${FLASK_URL}/health`)
+  return handleResponse(response)
+}
+
+// Get file URL for download/preview
+export const getFileUrl = (filename) => {
+  return `${FLASK_URL}/files/${filename}`
+}
+
+// =============================================================================
+// FUTURE NODE.JS APIs - Chat History & Authentication
+// =============================================================================
+
+// Authentication APIs (for future Node.js/SQL backend)
+export const authAPI = {
+  login: async (credentials) => {
+    const response = await fetch(`${FLASK_URL}/auth/login`, {
       method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ fileId, analysisType })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
     })
     return handleResponse(response)
   },
 
-  generateChart: async (fileId, chartConfig) => {
-    const response = await fetch(`${API_BASE_URL}/data/chart`, {
+  register: async (userData) => {
+    const response = await fetch(`${FLASK_URL}/auth/register`, {
       method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ fileId, chartConfig })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
     })
     return handleResponse(response)
   },
 
-  getTableData: async (fileId, page = 1, limit = 50) => {
-    const response = await fetch(`${API_BASE_URL}/data/table?fileId=${fileId}&page=${page}&limit=${limit}`, {
+  logout: async () => {
+    const response = await fetch(`${FLASK_URL}/auth/logout`, {
+      method: 'POST',
       headers: getAuthHeaders()
     })
     return handleResponse(response)
   }
 }
 
+// Chat APIs (for future Node.js/SQL backend)
+export const chatAPI = {
+  getChats: async () => {
+    const response = await fetch(`${FLASK_URL}/chats`, {
+      headers: getAuthHeaders()
+    })
+    return handleResponse(response)
+  },
+
+  createChat: async (chatData) => {
+    const response = await fetch(`${FLASK_URL}/chats`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(chatData)
+    })
+    return handleResponse(response)
+  },
+
+  getChat: async (chatId) => {
+    const response = await fetch(`${FLASK_URL}/chats/${chatId}`, {
+      headers: getAuthHeaders()
+    })
+    return handleResponse(response)
+  },
+
+  updateChat: async (chatId, updates) => {
+    const response = await fetch(`${FLASK_URL}/chats/${chatId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(updates)
+    })
+    return handleResponse(response)
+  },
+
+  deleteChat: async (chatId) => {
+    const response = await fetch(`${FLASK_URL}/chats/${chatId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    })
+    return handleResponse(response)
+  }
+}
+
+// Message APIs (for future Node.js/SQL backend)
+export const messageAPI = {
+  getMessages: async (chatId) => {
+    const response = await fetch(`${FLASK_URL}/chats/${chatId}/messages`, {
+      headers: getAuthHeaders()
+    })
+    return handleResponse(response)
+  },
+
+  saveMessage: async (chatId, messageData) => {
+    const response = await fetch(`${FLASK_URL}/chats/${chatId}/messages`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(messageData)
+    })
+    return handleResponse(response)
+  }
+}
+
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+
+// Check if backend is healthy
+export const isBackendHealthy = async () => {
+  try {
+    const result = await healthCheck()
+    return result.status === 'healthy'
+  } catch (error) {
+    return false
+  }
+}
+
+// Format file size for display
+export const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// =============================================================================
+// LEGACY COMPATIBILITY (deprecated - use sendMessage instead)
+// =============================================================================
+
+export const sendMessageToAgent = async (data) => {
+  console.warn('sendMessageToAgent is deprecated, use sendMessage instead')
+  return sendMessage(data.message, data.file_path || data.filePath)
+}
+
+// =============================================================================
+// MAIN EXPORT
+// =============================================================================
+
 export default {
+  // Core functionality (current)
+  uploadFile,
+  sendMessage,
+  healthCheck,
+  getFileUrl,
+  isBackendHealthy,
+  formatFileSize,
+  
+  // Future functionality
   authAPI,
   chatAPI,
   messageAPI,
-  uploadFile,
-  sendMessageToAgent,
-  dataAPI
+  
+  // Legacy (deprecated)
+  sendMessageToAgent
 }

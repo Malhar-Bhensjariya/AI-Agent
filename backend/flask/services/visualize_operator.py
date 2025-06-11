@@ -1,7 +1,7 @@
 from langchain_core.tools import tool
-from flask_app.tools.plot_generator import PlotGenerator
-from flask_app.utils.file_handler import load_file_as_dataframe
-from flask_app.utils.logger import log
+from tools.plot_generator import PlotGenerator
+from tools.file_handler import load_file_as_dataframe
+from utils.logger import log
 import json
 
 @tool

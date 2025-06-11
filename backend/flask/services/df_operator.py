@@ -1,6 +1,6 @@
 from typing import List, Any
 from langchain_core.tools import tool
-from flask_app.tools.df_editor import DataEditor
+from tools.df_editor import DataEditor
 
 @tool
 def remove_row(file_path: str, row_index: int) -> str:

@@ -2,8 +2,8 @@
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from flask_app.services.transformer_operator import get_transformer_tools
-from flask_app.utils.logger import log
+from services.transformer_operator import get_transformer_tools
+from utils.logger import log
 import os
 from dotenv import load_dotenv
 

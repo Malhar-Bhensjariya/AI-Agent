@@ -1,8 +1,8 @@
 import pandas as pd
 import os
 from typing import List, Dict, Union, Tuple
-from flask_app.utils.logger import log
-from flask_app.utils.file_handler import load_file_as_dataframe
+from utils.logger import log
+from tools.file_handler import load_file_as_dataframe
 
 class DataEditor:
     def __init__(self, file_path: str):
