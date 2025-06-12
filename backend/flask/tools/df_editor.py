@@ -8,15 +8,36 @@ class DataEditor:
     def __init__(self, file_path: str):
         """Initialize with file path and load DataFrame"""
         self.file_path = file_path
-        self.df = load_file_as_dataframe(file_path)  # Reuse existing file handler
+        self.df = load_file_as_dataframe(file_path)
+        # Store original column order - this is the key fix
+        self.original_columns = self.df.columns.tolist()
 
     def _save_dataframe(self):
-        """Save DataFrame back to file"""
-        ext = self.file_path.rsplit('.', 1)[1].lower()
-        if ext == 'csv':
-            self.df.to_csv(self.file_path, index=False)
-        elif ext in ('xls', 'xlsx'):
-            self.df.to_excel(self.file_path, index=False)
+        """Save DataFrame back to file, preserving original column order"""
+        try:
+            # CRITICAL FIX: Always reorder columns to match original order before saving
+            # First, get columns that still exist in original order
+            existing_original_cols = [col for col in self.original_columns if col in self.df.columns]
+            # Then add any new columns that weren't in original
+            new_cols = [col for col in self.df.columns if col not in self.original_columns]
+            # Final order: original columns first, then new columns
+            final_order = existing_original_cols + new_cols
+            
+            # Reorder the DataFrame columns
+            self.df = self.df[final_order]
+            
+            ext = self.file_path.rsplit('.', 1)[1].lower()
+            if ext == 'csv':
+                # Save with explicit column order preservation
+                self.df.to_csv(self.file_path, index=False, encoding='utf-8')
+            elif ext in ('xls', 'xlsx'):
+                self.df.to_excel(self.file_path, index=False, engine='openpyxl')
+            
+            log(f"Successfully saved file with shape: {self.df.shape}", "INFO")
+            log(f"Column order preserved: {self.df.columns.tolist()}", "INFO")
+        except Exception as e:
+            log(f"Error saving file: {str(e)}", "ERROR")
+            raise
 
     def _validate_row_index(self, user_row: int) -> int:
         """Convert 1-based user row to 0-based pandas index"""
@@ -45,17 +66,30 @@ class DataEditor:
     def remove_column(self, column_name: str) -> Tuple[str, pd.DataFrame]:
         """Remove a column and save the file"""
         self._validate_column(column_name)
+        
+        # Update original columns list when removing
+        if column_name in self.original_columns:
+            self.original_columns.remove(column_name)
+        
         self.df = self.df.drop(columns=[column_name])
         self._save_dataframe()
         log(f"Removed column '{column_name}' from {self.file_path}", "INFO")
         return f"Removed column '{column_name}'", self.df
 
-    def add_column(self, column_name: str, default_value: Union[str, int, float] = "") -> Tuple[str, pd.DataFrame]:
+    def add_column(self, column_name: str, default_value: Union[str, int, float] = "", position: int = None) -> Tuple[str, pd.DataFrame]:
         """Add a new column and save the file"""
         if column_name in self.df.columns:
             raise ValueError(f"Column '{column_name}' already exists")
         
+        # Add column to dataframe
         self.df[column_name] = default_value
+        
+        # Update original columns list - add to end unless position specified
+        if position is not None and 0 <= position <= len(self.original_columns):
+            self.original_columns.insert(position, column_name)
+        else:
+            self.original_columns.append(column_name)
+        
         self._save_dataframe()
         log(f"Added column '{column_name}' to {self.file_path}", "INFO")
         return f"Added column '{column_name}' with default value '{default_value}'", self.df
@@ -65,7 +99,7 @@ class DataEditor:
         if len(row_values) != len(self.df.columns):
             raise ValueError(f"Row length mismatch. Expected {len(self.df.columns)} values, got {len(row_values)}")
         
-        # Create new row as DataFrame and concatenate
+        # Create new row as DataFrame with correct column order
         new_row = pd.DataFrame([row_values], columns=self.df.columns)
         self.df = pd.concat([self.df, new_row], ignore_index=True)
         self._save_dataframe()
@@ -96,35 +130,40 @@ class DataEditor:
         return f"Updated row {user_row} with {values}", self.df
 
     def get_preview(self, n: int = 5) -> Dict:
-        """Get a preview of the DataFrame"""
+        """Get a preview of the DataFrame with preserved column order"""
+        # Ensure columns are in original order for preview
+        ordered_df = self.df[self.original_columns] if all(col in self.df.columns for col in self.original_columns) else self.df
         return {
-            "columns": self.df.columns.tolist(),
-            "data": self.df.head(n).fillna("").to_dict(orient="records"),
-            "shape": self.df.shape,
+            "columns": ordered_df.columns.tolist(),
+            "data": ordered_df.head(n).fillna("").to_dict(orient="records"),
+            "shape": ordered_df.shape,
             "file_path": self.file_path
         }
 
     def get_summary(self) -> Dict:
-        """Get comprehensive DataFrame summary"""
-        numeric_cols = self.df.select_dtypes(include=['number']).columns.tolist()
-        categorical_cols = self.df.select_dtypes(include=['object']).columns.tolist()
+        """Get comprehensive DataFrame summary with preserved column order"""
+        # Use ordered DataFrame for summary
+        ordered_df = self.df[self.original_columns] if all(col in self.df.columns for col in self.original_columns) else self.df
+        
+        numeric_cols = ordered_df.select_dtypes(include=['number']).columns.tolist()
+        categorical_cols = ordered_df.select_dtypes(include=['object']).columns.tolist()
         
         summary = {
             "basic_info": {
                 "file_path": self.file_path,
-                "columns": self.df.columns.tolist(),
-                "shape": self.df.shape,
-                "dtypes": self.df.dtypes.astype(str).to_dict(),
-                "missing_values": self.df.isnull().sum().to_dict(),
+                "columns": ordered_df.columns.tolist(),  # Ordered columns
+                "shape": ordered_df.shape,
+                "dtypes": ordered_df.dtypes.astype(str).to_dict(),
+                "missing_values": ordered_df.isnull().sum().to_dict(),
                 "numeric_columns": numeric_cols,
                 "categorical_columns": categorical_cols
             }
         }
         
-        # Add statistical summary for numeric columns
-        if not self.df.empty:
+        # Add statistical summary
+        if not ordered_df.empty:
             try:
-                stats = self.df.describe(include="all").fillna("").to_dict()
+                stats = ordered_df.describe(include="all").fillna("").to_dict()
                 summary["statistics"] = stats
             except Exception as e:
                 summary["statistics"] = f"Error generating stats: {str(e)}"

@@ -7,10 +7,9 @@ const AppContext = createContext()
 export const AppProvider = ({ children }) => {
   // Core state using useState hooks
   const [messages, setMessages] = useState([])
-  const [currentFile, setCurrentFile] = useState(null)
+  const [activeFile, setActiveFile] = useState(null) // Renamed for clarity
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [tableData, setTableData] = useState(null)
   const [chartData, setChartData] = useState(null)
   const [analysis, setAnalysis] = useState(null)
   const [currentChat, setCurrentChat] = useState(null)
@@ -43,41 +42,98 @@ export const AppProvider = ({ children }) => {
     setError(null)
   }
 
-  // Enhanced file functions
-  const setActiveFile = (file) => {
-    setCurrentFile(file)
-    // When a new file is set, update table data if available
-    if (file && file.tableData) {
-      setTableData(file.tableData)
-    } else if (file && file.preview) {
-      // If file has preview data, use that for table
-      setTableData(file.preview)
-    } else {
-      // Clear table data if no file data available
-      setTableData(null)
+  // File management functions - simplified and focused
+  const setCurrentFile = (fileData) => {
+    console.log('Setting active file:', fileData)
+    
+    if (!fileData) {
+      setActiveFile(null)
+      return
     }
+
+    // Structure the file data consistently
+    const structuredFile = {
+      // File metadata
+      filename: fileData.filename || fileData.name || 'Unknown',
+      size: fileData.size || 0,
+      type: fileData.type || 'text/csv',
+      
+      // Table data - this is what TableView will use
+      tableData: fileData.data || fileData.tableData || [],
+      headers: fileData.headers || (fileData.data && fileData.data.length > 0 ? Object.keys(fileData.data[0]) : []),
+      
+      // Original file object for backend operations
+      originalFile: fileData.file || fileData.originalFile || null,
+      file_path: fileData.file_path || fileData.filePath || fileData.path || null, // Add fileData.path
+      // Parsing info
+      parsedAt: new Date().toISOString(),
+      rowCount: (fileData.data || fileData.tableData || []).length
+    }
+
+    console.log('Structured file data:', structuredFile)
+    setActiveFile(structuredFile)
+  }
+
+  const updateFileData = (newData, newHeaders = null) => {
+    if (!activeFile) {
+      console.warn('No active file to update')
+      return
+    }
+
+    console.log('Updating file data:', newData, 'with headers:', newHeaders)
+    
+    const updatedFile = {
+      ...activeFile,
+      tableData: newData,
+      headers: newHeaders || activeFile.headers,
+      rowCount: newData ? newData.length : 0,
+      updatedAt: new Date().toISOString()
+    }
+
+    console.log('Updated file data:', updatedFile)
+    setActiveFile(updatedFile)
   }
 
   const clearCurrentFile = () => {
-    setCurrentFile(null)
-    setTableData(null)
+    console.log('Clearing active file')
+    setActiveFile(null)
+  }
+
+  // Get current table data - this is what components should use
+  const getCurrentTableData = () => {
+    return activeFile?.tableData || []
+  }
+
+  const getCurrentHeaders = () => {
+    return activeFile?.headers || []
+  }
+
+  // File info getters
+  const hasActiveFile = () => {
+    return activeFile !== null && Array.isArray(activeFile.tableData) && activeFile.tableData.length > 0
+  }
+
+  const getActiveFileName = () => {
+    return activeFile?.filename || 'No file loaded'
+  }
+
+  const getActiveFileInfo = () => {
+    if (!activeFile) return null
+    
+    return {
+      filename: activeFile.filename,
+      size: activeFile.size,
+      rowCount: activeFile.rowCount,
+      headers: activeFile.headers,
+      parsedAt: activeFile.parsedAt,
+      updatedAt: activeFile.updatedAt
+    }
   }
 
   // Enhanced UI functions
   const clearError = () => setError(null)
 
-  // Enhanced data functions - always update table data for active file
-  const updateTableData = (data) => {
-    setTableData(data)
-    // Also update the current file's table data if available
-    if (currentFile) {
-      setCurrentFile(prev => ({
-        ...prev,
-        tableData: data
-      }))
-    }
-  }
-
+  // Enhanced chart functions
   const updateChartData = (data) => setChartData(data)
 
   // Enhanced chat functions
@@ -119,7 +175,7 @@ export const AppProvider = ({ children }) => {
     clearSession()
     setChartData(null)
     setAnalysis(null)
-    // Don't clear current file and table data - keep them persistent
+    // Keep active file - it should persist
   }
 
   // Auth functions
@@ -128,7 +184,7 @@ export const AppProvider = ({ children }) => {
   const logout = () => {
     setUser(null)
     clearAll()
-    clearCurrentFile() // Only clear file on logout
+    clearCurrentFile() // Clear file on logout
   }
 
   // Context value
@@ -136,10 +192,10 @@ export const AppProvider = ({ children }) => {
     // State
     messages,
     currentChat,
-    currentFile,
+    currentFile: activeFile, // For backward compatibility
+    activeFile, // New clear name
     loading,
     error,
-    tableData,
     chartData,
     analysis,
     chats,
@@ -151,14 +207,25 @@ export const AppProvider = ({ children }) => {
     deleteMessage,
     setMessages,
     clearMessages,
-    setCurrentFile: setActiveFile, // Use the enhanced version
+    
+    // File management
+    setCurrentFile,
+    updateFileData,
     clearCurrentFile,
+    getCurrentTableData,
+    getCurrentHeaders,
+    hasActiveFile,
+    getActiveFileName,
+    getActiveFileInfo,
+    
+    // UI
     setLoading,
     setError,
     clearError,
-    updateTableData,
     updateChartData,
     setAnalysis,
+    
+    // Chat management
     setCurrentChat,
     createNewChat,
     updateChat,
@@ -166,6 +233,8 @@ export const AppProvider = ({ children }) => {
     deleteChat,
     clearSession,
     clearAll,
+    
+    // Auth
     login,
     logout,
     setUser
@@ -185,28 +254,6 @@ export const useAppContext = () => {
     throw new Error('useAppContext must be used within an AppProvider')
   }
   return context
-}
-
-// Action types export for backward compatibility (if needed)
-export const ActionTypes = {
-  ADD_MESSAGE: 'ADD_MESSAGE',
-  UPDATE_MESSAGE: 'UPDATE_MESSAGE',
-  DELETE_MESSAGE: 'DELETE_MESSAGE',
-  SET_MESSAGES: 'SET_MESSAGES',
-  CLEAR_MESSAGES: 'CLEAR_MESSAGES',
-  SET_CURRENT_FILE: 'SET_CURRENT_FILE',
-  CLEAR_CURRENT_FILE: 'CLEAR_CURRENT_FILE',
-  SET_LOADING: 'SET_LOADING',
-  SET_ERROR: 'SET_ERROR',
-  CLEAR_ERROR: 'CLEAR_ERROR',
-  SET_TABLE_DATA: 'SET_TABLE_DATA',
-  SET_CHART_DATA: 'SET_CHART_DATA',
-  SET_ANALYSIS: 'SET_ANALYSIS',
-  SET_CURRENT_CHAT: 'SET_CURRENT_CHAT',
-  ADD_CHAT: 'ADD_CHAT',
-  UPDATE_CHAT: 'UPDATE_CHAT',
-  DELETE_CHAT: 'DELETE_CHAT',
-  SET_USER: 'SET_USER'
 }
 
 export default AppContext

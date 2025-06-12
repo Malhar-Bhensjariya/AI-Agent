@@ -22,7 +22,7 @@ class ChatAgentExecutor:
         )
 
         self.prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a friendly and helpful AI assistant. Your role is to have natural conversations with users and provide helpful responses.
+            ("system", """You are an AI Data Analyst (AIDA) assistant. Your role is to have natural conversations with users and provide helpful responses.
 
 PERSONALITY TRAITS:
 - Be conversational, warm, and approachable

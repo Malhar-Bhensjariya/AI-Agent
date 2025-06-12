@@ -5,13 +5,13 @@ import { useAgentResponse } from '../../hooks/useAgentResponse'
 import { useUploadTask } from '../../hooks/useUploadTask'
 
 const ChatBox = () => {
-  const { messages, currentChat, loading, error,addMessage, clearMessages, clearCurrentFile } = useAppContext()
+  const { messages, currentChat, loading, error, addMessage, clearMessages, clearCurrentFile, setCurrentFile } = useAppContext()
   const [inputMessage, setInputMessage] = useState('')
   const [uploadedFile, setUploadedFile] = useState(null)
+  const [isParsingFile, setIsParsingFile] = useState(false)
   const fileInputRef = useRef(null)
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
-  
   const { sendMessage, isLoading: agentLoading, error: agentError } = useAgentResponse()
   const { uploadFile, isUploading, uploadProgress, error: uploadError } = useUploadTask()
 
@@ -29,18 +29,18 @@ const ChatBox = () => {
   }, [inputMessage])
 
   const handleSendMessage = async () => {
-    if ((!inputMessage.trim() && !uploadedFile) || agentLoading) return
-
     const messageText = inputMessage.trim()
-    const fileToSend = uploadedFile
 
+    // Allow sending if either message or file exists
+    if (!messageText || agentLoading) return
+
+    // Create user message - handle file-only uploads
     // Create user message
     const newMessage = {
       id: Date.now() + Math.random(),
       text: messageText,
       sender: 'user',
-      timestamp: new Date().toISOString(),
-      file: fileToSend
+      timestamp: new Date().toISOString()
     }
 
     // Add user message to chat
@@ -54,8 +54,8 @@ const ChatBox = () => {
     }
 
     try {
-      // Send to agent with file path if available
-      await sendMessage(messageText, fileToSend?.path)
+      // Send message - useAgentResponse will handle active file automatically
+      await sendMessage(messageText)      
     } catch (error) {
       console.error('Failed to send message:', error)
       // Error handling is done in useAgentResponse hook
@@ -67,12 +67,36 @@ const ChatBox = () => {
     if (!file) return
 
     try {
-      const uploadedFileData = await uploadFile(file)
-      setUploadedFile(uploadedFileData)
+      // Use the upload hook which now handles local parsing
+      const fileInfo = await uploadFile(file)
+      
+      // Auto-send analysis message
+      addMessage({
+        id: Date.now() + Math.random(),
+        text: `Loaded ${file.name} with ${fileInfo.tableData.length} rows`,
+        sender: 'user',
+        timestamp: new Date().toISOString(),
+        fileLoaded: true
+      })
+      
+      // Add agent confirmation
+      addMessage({
+        id: Date.now() + Math.random(),
+        text: `Great! I've loaded your file "${file.name}" with ${fileInfo.tableData.length} rows and ${fileInfo.headers.length} columns. You can view the data in the table view, or ask me questions about it!`,
+        sender: 'agent',
+        timestamp: new Date().toISOString()
+      })
+      
     } catch (error) {
-      console.error('File upload failed:', error)
-      // Error is handled in useUploadTask hook
-    }
+        console.error('File upload failed:', error)
+        addMessage({
+          id: Date.now() + Math.random(),
+          text: `❌ Failed to upload file: ${error.message}`,
+          sender: 'agent',
+          timestamp: new Date().toISOString(),
+          error: true
+        })
+      }
   }
 
   const handleKeyPress = (e) => {
@@ -99,6 +123,9 @@ const ChatBox = () => {
   }
 
   const isProcessing = agentLoading || isUploading || loading
+  
+  // Check if we can send (either message or file)
+  const canSend = (inputMessage.trim() || uploadedFile) && !isProcessing
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -277,7 +304,7 @@ const ChatBox = () => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder={uploadedFile ? "Ask a question about your data..." : "Type your message or upload a file..."}
+                placeholder={uploadedFile ? "Ask a question about your data or just press send to analyze the file..." : "Type your message or upload a file..."}
                 className="w-full p-3 pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows="1"
                 style={{ minHeight: '44px', maxHeight: '120px' }}
@@ -295,7 +322,7 @@ const ChatBox = () => {
             {/* Send Button */}
             <button
               onClick={handleSendMessage}
-              disabled={(!inputMessage.trim() && !uploadedFile) || isProcessing}
+              disabled={!canSend}
               className="flex-shrink-0 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               title="Send message"
             >

@@ -2,8 +2,8 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 import json
+import pandas as pd
 from werkzeug.exceptions import RequestEntityTooLarge
-
 from agents.agent_executor import execute_agent
 from tools.file_handler import save_uploaded_file, allowed_file
 from utils.logger import log
@@ -18,6 +18,26 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def read_file_with_preserved_order(file_path: str) -> pd.DataFrame:
+    """Read file while preserving original column order"""
+    try:
+        ext = file_path.rsplit('.', 1)[1].lower()
+        if ext == 'csv':
+            # Read CSV with explicit encoding and preserve column order
+            df = pd.read_csv(file_path, encoding='utf-8')
+        elif ext in ('xls', 'xlsx'):
+            df = pd.read_excel(file_path, engine='openpyxl')
+        else:
+            raise ValueError(f"Unsupported file type: {ext}")
+        
+        # CRITICAL FIX: Ensure we maintain the exact column order from the file
+        # Don't perform any operations that might shuffle columns
+        log(f"Read file with columns in order: {df.columns.tolist()}", "INFO")
+        return df
+    except Exception as e:
+        log(f"Error reading file {file_path}: {str(e)}", "ERROR")
+        raise
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -83,20 +103,34 @@ def upload_file():
 def chat():
     """
     Main chat endpoint - handles all user messages and agent routing
-    Accepts: message, optional file_path
+    Accepts: message, optional file upload
     Returns: Complex response (text, chart config, files, etc.)
     """
     try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({
-                "success": False,
-                "error": "No JSON data provided"
-            }), 400
-
-        user_message = data.get('message', '').strip()
-        file_path = data.get('file_path')  # Optional
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.get_json()
+            user_message = data.get('message', '').strip()
+            file_path = data.get('file_path')
+        else:
+            # Handle form data with file upload
+            user_message = request.form.get('message', '').strip()
+            file_path = None
+            
+            # Handle file upload - FIXED: Properly save the file
+            if 'file' in request.files:
+                print("file: ", request.files['file'])
+                file = request.files['file']
+                if file and file.filename and allowed_file(file.filename):
+                    try:
+                        file_path = save_uploaded_file(file, app.config['UPLOAD_FOLDER'])
+                        log(f"File saved for chat: {file_path}", "INFO")
+                    except Exception as e:
+                        log(f"Error saving file: {str(e)}", "ERROR")
+                        return jsonify({
+                            "success": False,
+                            "error": f"Failed to save file: {str(e)}"
+                        }), 500
 
         if not user_message:
             return jsonify({
@@ -125,6 +159,26 @@ def chat():
         # Add file info if present
         if file_path:
             response_data["file_path"] = file_path
+            
+            # Read and return updated file data with preserved column order
+            try:
+                df = read_file_with_preserved_order(file_path)
+                
+                # Ensure consistent data structure with preserved order
+                response_data["updated_data"] = df.to_dict('records')
+                #print("\n\n\n", response_data["updated_data"])
+                response_data["headers"] = df.columns.tolist()
+                response_data["file_info"] = {
+                    "rows": len(df),
+                    "columns": len(df.columns),
+                    "column_order": df.columns.tolist()  # Explicitly include column order
+                }
+                
+                log(f"Returning updated file data: {len(df)} rows, {len(df.columns)} columns", "INFO")
+                log(f"Column order preserved: {df.columns.tolist()}", "INFO")
+            except Exception as e:
+                log(f"Error reading updated file: {str(e)}", "ERROR")
+                response_data["error"] = f"Failed to read updated file: {str(e)}"
 
         # Determine response type based on result
         if _is_json_string(result):

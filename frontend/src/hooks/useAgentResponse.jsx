@@ -3,34 +3,46 @@ import { useAppContext } from '../context/AppContext'
 import { sendMessage } from '../services/api'
 
 export const useAgentResponse = () => {
-  const { addMessage, setTableView, setError, clearError } = useAppContext()
+  const { addMessage, setTableView, setError, clearError, activeFile, updateFileData } = useAppContext()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setLocalError] = useState(null)
 
-  const sendAgentMessage = async (message, filePath = null) => {
+  const sendAgentMessage = async (message, fileData = null) => {
     setIsLoading(true)
     setLocalError(null)
 
     try {
-      // Call the updated API service
-      const response = await sendMessage(message, filePath)
+      // Fix: Don't try to access file.path - just send the file object
+      const fileToSend = fileData || (activeFile ? {
+        file: activeFile.file,
+        data: activeFile.tableData,
+        headers: activeFile.headers,
+        filename: activeFile.filename,
+        file_path: activeFile.file_path
+      } : null)
 
-      // Create agent response message
-      const agentMessage = {
-        id: Date.now() + Math.random(), // Ensure unique ID
+      // Pass the entire fileToSend object, not just the path
+      const response = await sendMessage(message, fileToSend)
+      console.log('Agent response:', response);
+
+      if (response.updated_data && activeFile) {
+        console.log('Updating file data with backend response:', response.updated_data)
+        console.log('Backend headers:', response.headers)
+        updateFileData(response.updated_data, response.headers)
+      }
+
+      // ✅ Add agent's message to chat
+      addMessage({
+        id: Date.now() + Math.random(),
         text: response.response || response.text || response.message,
         sender: 'agent',
         timestamp: new Date().toISOString(),
         chartData: response.chartData || response.chart_data || null,
         tableData: response.tableData || response.table_data || null,
         analysis: response.analysis || null
-      }
+      })
 
-      // Add agent response to messages
-      addMessage(agentMessage)
-
-      // Show table view if response contains table data or if explicitly requested
-      if (response.showTable || response.show_table || agentMessage.tableData) {
+      if (response.showTable || response.show_table || response.tableData) {
         setTableView(true)
       }
 
@@ -39,18 +51,15 @@ export const useAgentResponse = () => {
       const errorMessage = err.message || 'An error occurred while processing your request'
       setLocalError(errorMessage)
       setError(errorMessage)
-      
-      // Add error message to chat
-      const errorChatMessage = {
+
+      addMessage({
         id: Date.now() + Math.random(),
         text: `Sorry, I encountered an error: ${errorMessage}. Please try again.`,
         sender: 'agent',
         timestamp: new Date().toISOString(),
         error: true
-      }
-      
-      addMessage(errorChatMessage)
-      
+      })
+
       throw err
     } finally {
       setIsLoading(false)
@@ -66,10 +75,17 @@ export const useAgentResponse = () => {
     setLocalError(null)
 
     try {
-      // Call API again with the same message
-      const response = await sendMessage(originalMessage, filePath)
+      // Fix: Pass the active file instead of just filePath
+      const fileToSend = activeFile ? {
+        file: activeFile.file,
+        data: activeFile.tableData,
+        headers: activeFile.headers,
+        filename: activeFile.filename,
+        file_path: activeFile.file_path
+      } : null
 
-      // Create new agent response message
+      const response = await sendMessage(originalMessage, fileToSend)
+
       const regeneratedMessage = {
         id: Date.now() + Math.random(),
         text: response.response || response.text || response.message,
@@ -81,10 +97,8 @@ export const useAgentResponse = () => {
         regenerated: true
       }
 
-      // Add regenerated response to messages
       addMessage(regeneratedMessage)
 
-      // Show table view if needed
       if (response.showTable || response.show_table || regeneratedMessage.tableData) {
         setTableView(true)
       }
@@ -94,17 +108,15 @@ export const useAgentResponse = () => {
       const errorMessage = err.message || 'Failed to regenerate response'
       setLocalError(errorMessage)
       setError(errorMessage)
-      
-      const errorChatMessage = {
+
+      addMessage({
         id: Date.now() + Math.random(),
         text: `Sorry, I couldn't regenerate the response: ${errorMessage}. Please try again.`,
         sender: 'agent',
         timestamp: new Date().toISOString(),
         error: true
-      }
-      
-      addMessage(errorChatMessage)
-      
+      })
+
       throw err
     } finally {
       setIsLoading(false)

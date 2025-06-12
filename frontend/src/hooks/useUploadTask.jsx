@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { uploadFile as uploadFileAPI } from '../services/api'
+import { uploadFile as uploadFileAPI, parseFileLocally } from '../services/api'
 import { useAppContext } from '../context/AppContext'
 
 export const useUploadTask = () => {
@@ -13,7 +13,6 @@ export const useUploadTask = () => {
       throw new Error('No file provided')
     }
 
-    // Validate file type
     const allowedTypes = [
       'text/csv',
       'application/vnd.ms-excel',
@@ -28,8 +27,7 @@ export const useUploadTask = () => {
       throw new Error('Unsupported file type. Please upload CSV, Excel, JSON, PDF, or text files.')
     }
 
-    // Validate file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024 // 10MB
+    const maxSize = 10 * 1024 * 1024
     if (file.size > maxSize) {
       throw new Error('File size too large. Please upload files smaller than 10MB.')
     }
@@ -39,34 +37,39 @@ export const useUploadTask = () => {
     setUploadProgress(0)
 
     try {
-      // Upload file using the API service
+      // Parse file locally first
+      const parsedData = await parseFileLocally(file)
+
+      // Upload to backend for processing
       const response = await uploadFileAPI(file, (progress) => {
         setUploadProgress(Math.round(progress))
       })
 
-      // Create file info object with enhanced data handling
       const fileInfo = {
         id: response.file_id || response.fileId || Date.now(),
-        name: file.name,
+        filename: file.name,
         type: file.type,
         size: file.size,
         path: response.file_path || response.filePath,
+        file_path: response.file_path || response.filePath,
         uploadedAt: new Date().toISOString(),
         status: 'uploaded',
-        preview: response.preview || null,
-        summary: response.summary || null,
-        tableData: response.table_data || response.tableData || response.preview || null
+        // Use locally parsed data
+        data: parsedData.data,
+        tableData: parsedData.data,
+        headers: parsedData.headers,
+        file: file // Store original file
       }
 
-      // Update context with current file (this will automatically update table data)
+      console.log('Processed file info:', fileInfo)
+
+      // Ensure preview data is properly stored in context
+      const finalFileInfo = {
+        ...fileInfo,
+        preview: fileInfo.preview || fileInfo.tableData || null
+      }
+
       setCurrentFile(fileInfo)
-
-      // If we have table data from the upload response, update it
-      if (fileInfo.tableData) {
-        updateTableData(fileInfo.tableData)
-      }
-
-      // Clear any previous errors
       clearError()
 
       return fileInfo
@@ -77,19 +80,17 @@ export const useUploadTask = () => {
       throw err
     } finally {
       setIsUploading(false)
-      // Reset progress after a short delay
       setTimeout(() => setUploadProgress(0), 1000)
     }
   }
 
   const validateFileExtension = (fileName) => {
     const allowedExtensions = ['.csv', '.xlsx', '.xls', '.json', '.txt', '.pdf', '.tsv']
-    const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'))
-    return allowedExtensions.includes(fileExtension)
+    const ext = fileName.toLowerCase().substring(fileName.lastIndexOf('.'))
+    return allowedExtensions.includes(ext)
   }
 
   const validateFileType = (file) => {
-    // Check both MIME type and file extension
     const allowedTypes = [
       'text/csv',
       'application/vnd.ms-excel',
@@ -99,7 +100,6 @@ export const useUploadTask = () => {
       'application/pdf',
       'text/tab-separated-values'
     ]
-    
     return allowedTypes.includes(file.type) || validateFileExtension(file.name)
   }
 
@@ -110,7 +110,6 @@ export const useUploadTask = () => {
   }
 
   const getFilePreview = (file) => {
-    // Generate preview information for the file
     return {
       name: file.name,
       size: formatFileSize(file.size),

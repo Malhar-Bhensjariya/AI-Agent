@@ -28,11 +28,14 @@ def save_uploaded_file(uploaded_file, upload_dir: str) -> str:
 def load_file_as_dataframe(file_path: str) -> pd.DataFrame:
     """
     Load a saved file (CSV, XLS, XLSX) into a pandas DataFrame.
+    Preserves column order as they appear in the file.
     """
     ext = file_path.rsplit('.', 1)[1].lower()
     if ext == 'csv':
-        return pd.read_csv(file_path)
+        # Explicitly preserve column order with encoding specification
+        return pd.read_csv(file_path, encoding='utf-8')
     elif ext in ('xls', 'xlsx'):
-        return pd.read_excel(file_path)
+        # Use openpyxl engine for better consistency
+        return pd.read_excel(file_path, engine='openpyxl')
     else:
         raise ValueError(f"Unsupported file extension: .{ext}")

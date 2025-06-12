@@ -1,4 +1,5 @@
 const FLASK_URL = import.meta.env.VITE_FLASK_API || 'http://localhost:5000'
+import Papa from 'papaparse'
 
 // Helper function to handle API responses
 const handleResponse = async (response) => {
@@ -64,18 +65,62 @@ export const uploadFile = async (file, onProgress) => {
 }
 
 // Send message in chat (main chat functionality)
-export const sendMessage = async (message, filePath = null) => {
-  const payload = { message }
-  if (filePath) {
-    payload.file_path = filePath
+// Send message with file data directly
+export const sendMessage = async (message, fileData = null) => {
+  const payload = {
+    message,
+    file_path: fileData?.file_path || null
   }
-
+  console.log('Sending message:', payload);
   const response = await fetch(`${FLASK_URL}/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify(payload)
   })
+
   return handleResponse(response)
+}
+
+// Parse CSV/Excel file locally
+export const parseFileLocally = async (file) => {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      reject(new Error('No file provided'))
+      return
+    }
+
+    const fileExtension = file.name.split('.').pop().toLowerCase()
+    
+    if (fileExtension === 'csv') {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        try {
+          const csv = e.target.result
+          const results = Papa.parse(csv, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true
+          })
+          
+          resolve({
+            data: results.data,
+            headers: Object.keys(results.data[0] || {}),
+            filename: file.name,
+            size: file.size,
+            type: file.type
+          })
+        } catch (error) {
+          reject(error)
+        }
+      }
+      reader.onerror = () => reject(new Error('Failed to read file'))
+      reader.readAsText(file)
+    } else {
+      reject(new Error('Only CSV files are supported for local parsing'))
+    }
+  })
 }
 
 // Health check

@@ -18,8 +18,9 @@ class CSVAgentExecutor:
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash",
             google_api_key=api_key,
-            temperature=0.1,
-            convert_system_message_to_human=True
+            temperature=0,
+            convert_system_message_to_human=True,
+            verbose=False
         )
 
         self.prompt = ChatPromptTemplate.from_messages([
@@ -58,6 +59,10 @@ Always confirm successful operations and provide helpful context about the chang
     def execute(self, file_path: str, question: str):
         """Execute user query against the specified file"""
         try:
+            # Fix: Validate file_path is not None
+            if not file_path:
+                return "Error: No file provided. Please upload a CSV or Excel file first."
+            
             # Validate file exists
             if not os.path.exists(file_path):
                 return f"Error: File not found at {file_path}"
