@@ -80,19 +80,24 @@ Always extract and return the chart configuration JSON from tool responses for t
     def _extract_chart_config(self, tool_response: str) -> dict:
         """Extract Chart.js configuration JSON from tool response"""
         try:
-            # Look for JSON in the response using regex
-            json_pattern = r'Chart data: (\{.*\})'
+            # Look for JSON in the response using regex - improved pattern
+            json_pattern = r'Chart data: (\{.*?\})(?=\s|$)'
             match = re.search(json_pattern, tool_response, re.DOTALL)
             
             if match:
                 json_str = match.group(1)
                 return json.loads(json_str)
             else:
-                # Try to find any JSON object in the response
-                json_pattern = r'(\{[^{}]*"type"[^{}]*\})'
-                match = re.search(json_pattern, tool_response, re.DOTALL)
-                if match:
-                    return json.loads(match.group(1))
+                # Try to find any complete JSON object with proper nesting
+                json_pattern = r'(\{(?:[^{}]|{[^{}]*})*\})'
+                matches = re.findall(json_pattern, tool_response, re.DOTALL)
+                for json_str in matches:
+                    try:
+                        parsed = json.loads(json_str)
+                        if 'type' in parsed and 'data' in parsed:
+                            return parsed
+                    except:
+                        continue
                 
             return None
         except (json.JSONDecodeError, AttributeError) as e:

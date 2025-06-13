@@ -15,6 +15,7 @@ export const AppProvider = ({ children }) => {
   const [currentChat, setCurrentChat] = useState(null)
   const [chats, setChats] = useState([])
   const [user, setUser] = useState(null)
+  const [tableView, setTableView] = useState(false) // Add this missing state
 
   // Enhanced message functions
   const addMessage = (message) => {
@@ -64,10 +65,15 @@ export const AppProvider = ({ children }) => {
       
       // Original file object for backend operations
       originalFile: fileData.file || fileData.originalFile || null,
-      file_path: fileData.file_path || fileData.filePath || fileData.path || null, // Add fileData.path
+      file_path: fileData.file_path || fileData.filePath || fileData.path || null,
+      
       // Parsing info
       parsedAt: new Date().toISOString(),
-      rowCount: (fileData.data || fileData.tableData || []).length
+      rowCount: (fileData.data || fileData.tableData || []).length,
+      
+      // Add analysis tracking
+      lastAnalysis: null,
+      analysisHistory: []
     }
 
     console.log('Structured file data:', structuredFile)
@@ -94,9 +100,27 @@ export const AppProvider = ({ children }) => {
     setActiveFile(updatedFile)
   }
 
+  // Add analysis tracking
+  const addAnalysisToFile = (analysisType, analysisResult) => {
+    if (!activeFile) return
+
+    const analysis = {
+      type: analysisType,
+      result: analysisResult,
+      timestamp: new Date().toISOString()
+    }
+
+    setActiveFile(prev => ({
+      ...prev,
+      lastAnalysis: analysis,
+      analysisHistory: [...(prev.analysisHistory || []), analysis]
+    }))
+  }
+
   const clearCurrentFile = () => {
     console.log('Clearing active file')
     setActiveFile(null)
+    setTableView(false) // Also hide table view when clearing file
   }
 
   // Get current table data - this is what components should use
@@ -126,7 +150,9 @@ export const AppProvider = ({ children }) => {
       rowCount: activeFile.rowCount,
       headers: activeFile.headers,
       parsedAt: activeFile.parsedAt,
-      updatedAt: activeFile.updatedAt
+      updatedAt: activeFile.updatedAt,
+      lastAnalysis: activeFile.lastAnalysis,
+      analysisCount: activeFile.analysisHistory?.length || 0
     }
   }
 
@@ -169,6 +195,7 @@ export const AppProvider = ({ children }) => {
   const clearSession = () => {
     clearMessages()
     clearError()
+    setTableView(false)
   }
 
   const clearAll = () => {
@@ -200,6 +227,7 @@ export const AppProvider = ({ children }) => {
     analysis,
     chats,
     user,
+    tableView,
     
     // Functions
     addMessage,
@@ -217,6 +245,7 @@ export const AppProvider = ({ children }) => {
     hasActiveFile,
     getActiveFileName,
     getActiveFileInfo,
+    addAnalysisToFile,
     
     // UI
     setLoading,
@@ -224,6 +253,7 @@ export const AppProvider = ({ children }) => {
     clearError,
     updateChartData,
     setAnalysis,
+    setTableView,
     
     // Chat management
     setCurrentChat,

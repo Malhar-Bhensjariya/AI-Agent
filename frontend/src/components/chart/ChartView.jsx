@@ -47,14 +47,21 @@ const ChartView = ({ data, type = 'bar' }) => {
 
       const ctx = canvasRef.current.getContext('2d')
       
-      let chartConfig
+      let chartConfig = null
       
-      // Handle JSON string response from Python backend
+      // Handle different data formats from backend
       if (typeof data === 'string') {
         try {
           chartConfig = JSON.parse(data)
         } catch (parseError) {
           throw new Error('Invalid JSON format from backend')
+        }
+      } else if (data.config) {
+        // Handle if data is wrapped in config property (from useAgentResponse)
+        if (typeof data.config === 'string') {
+          chartConfig = JSON.parse(data.config)
+        } else {
+          chartConfig = data.config
         }
       } else if (data.chartConfig) {
         // Handle if data is wrapped in chartConfig property
@@ -63,16 +70,12 @@ const ChartView = ({ data, type = 'bar' }) => {
         } else {
           chartConfig = data.chartConfig
         }
-      } else if (data.config) {
-        // Alternative config field
-        if (typeof data.config === 'string') {
-          chartConfig = JSON.parse(data.config)
-        } else {
-          chartConfig = data.config
-        }
-      } else {
-        // Build config from raw data
+      } else if (data.labels && data.datasets) {
+        // Handle raw Chart.js data format
         chartConfig = buildChartConfig(data, type)
+      } else {
+        // Assume data is already a chart config
+        chartConfig = data
       }
 
       // Validate chart config structure
@@ -91,11 +94,20 @@ const ChartView = ({ data, type = 'bar' }) => {
         Object.keys(callbacks).forEach(key => {
           if (typeof callbacks[key] === 'string') {
             try {
-              // Convert string function to actual function
-              // This handles the tooltip callback from pie charts
-              callbacks[key] = new Function('context', `return ${callbacks[key].replace('function(context)', '')}`)
+              // Convert string function to actual function for pie chart tooltips
+              const funcString = callbacks[key]
+              if (funcString.includes('function(context)')) {
+                callbacks[key] = new Function('context', funcString.replace(/^function\(context\)\s*\{?\s*return\s*/, '').replace(/;?\s*\}?$/, ''))
+              } else {
+                // Simple replacement for the pie chart tooltip format
+                callbacks[key] = function(context) {
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                  const percentage = ((context.parsed / total) * 100).toFixed(1)
+                  return context.label + ": " + context.parsed + " (" + percentage + "%)"
+                }
+              }
             } catch (e) {
-              // If conversion fails, remove the callback
+              // If conversion fails, use default callback
               delete callbacks[key]
             }
           }
@@ -108,7 +120,8 @@ const ChartView = ({ data, type = 'bar' }) => {
         maintainAspectRatio: false,
         interaction: {
           intersect: false,
-          mode: 'index'
+          mode: 'index',
+          ...chartConfig.options?.interaction
         },
         plugins: {
           legend: {

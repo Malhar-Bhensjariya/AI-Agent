@@ -1,14 +1,16 @@
-from agents.editor_agent import CSVAgentExecutor as EditorAgent
-from agents.data_transform_agent import DataTransformAgentExecutor as TransformAgentExecutor
+from agents.editor_agent import CSVAgentExecutor
+from agents.data_transform_agent import DataTransformAgentExecutor
 from agents.visualization_agent import VisualizationAgentExecutor
 from agents.chat_agent import ChatAgentExecutor
+from agents.data_analyzer_agent import AnalyzerAgentExecutor
 from agents.tool_selector import detect_agent_type
 from utils.logger import log
 
 # Central registry for easy mapping
 AGENT_REGISTRY = {
-    "editor": EditorAgent,
-    "transform": TransformAgentExecutor,
+    "editor": CSVAgentExecutor,
+    "analyze": AnalyzerAgentExecutor,
+    "transform": DataTransformAgentExecutor,
     "visual": VisualizationAgentExecutor,
     "chat": ChatAgentExecutor
 }

@@ -110,36 +110,52 @@ class DataTransformer:
             log(f"Error normalizing column: {e}", level="ERROR")
             raise ValueError(f"Normalization failed for column '{column_name}': {str(e)}")
 
-    def get_column_info(self, column_name: str = None) -> dict:
-        """Get information about columns"""
-        if column_name:
-            if column_name not in self.df.columns:
-                available_cols = list(self.df.columns)
-                raise ValueError(f"Column '{column_name}' does not exist. Available columns: {available_cols}")
-            
-            col_info = {
-                "name": column_name,
-                "dtype": str(self.df[column_name].dtype),
-                "non_null_count": self.df[column_name].count(),
-                "null_count": self.df[column_name].isnull().sum(),
-                "unique_count": self.df[column_name].nunique()
-            }
-            
-            # Add stats for numeric columns
-            if pd.api.types.is_numeric_dtype(self.df[column_name]):
-                col_info.update({
-                    "min": self.df[column_name].min(),
-                    "max": self.df[column_name].max(),
-                    "mean": self.df[column_name].mean(),
-                    "std": self.df[column_name].std()
-                })
-            
-            return col_info
-        else:
-            # Return info for all columns
-            return {
-                "columns": self.df.columns.tolist(),
-                "shape": self.df.shape,
-                "dtypes": self.df.dtypes.astype(str).to_dict(),
-                "missing_values": self.df.isnull().sum().to_dict()
-            }
+    def standardize_column(self, column_name: str) -> str:
+        """Standardize a numeric column using Z-score"""
+        if column_name not in self.df.columns:
+            raise ValueError(f"Column '{column_name}' does not exist. Available columns: {list(self.df.columns)}")
+        try:
+            col = pd.to_numeric(self.df[column_name], errors='coerce')
+            if col.isnull().sum() > self.df[column_name].isnull().sum():
+                raise ValueError(f"Column '{column_name}' contains non-numeric values")
+
+            mean = col.mean()
+            std = col.std()
+            if std == 0:
+                return f"All values in column '{column_name}' are the same. Z-score standardization not needed."
+
+            self.df[column_name] = (col - mean) / std
+            self._save_file()
+            log(f"Standardized column '{column_name}' using Z-score", level="INFO")
+            return f"Successfully standardized column '{column_name}' using Z-score"
+        except Exception as e:
+            log(f"Error standardizing column: {e}", level="ERROR")
+            raise ValueError(f"Failed to standardize column '{column_name}': {str(e)}")
+
+    def remove_duplicates(self) -> str:
+        """Remove duplicate rows from the dataset"""
+        try:
+            before = len(self.df)
+            self.df = self.df.drop_duplicates()
+            after = len(self.df)
+            removed = before - after
+            self._save_file()
+            log(f"Removed {removed} duplicate rows", level="INFO")
+            return f"Removed {removed} duplicate rows"
+        except Exception as e:
+            log(f"Error removing duplicates: {e}", level="ERROR")
+            raise ValueError(f"Failed to remove duplicates: {str(e)}")
+
+    def drop_missing_rows(self) -> str:
+        """Drop all rows with any missing values"""
+        try:
+            before = len(self.df)
+            self.df = self.df.dropna()
+            after = len(self.df)
+            removed = before - after
+            self._save_file()
+            log(f"Dropped {removed} rows with missing values", level="INFO")
+            return f"Dropped {removed} rows containing missing values"
+        except Exception as e:
+            log(f"Error dropping missing rows: {e}", level="ERROR")
+            raise ValueError(f"Failed to drop rows: {str(e)}")

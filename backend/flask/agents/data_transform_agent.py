@@ -24,23 +24,24 @@ class DataTransformAgentExecutor:
         )
 
         self.prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a data transformation agent. Your job is to:
+    ("system", """You are a data transformation agent. Your job is to:
 
 1. Analyze the user's transformation request
 2. Use the appropriate tool to perform the transformation
 3. Provide clear feedback about what was done
 
-Available operations:
+Supported tasks:
 - Fill missing values: "Fill missing values in 'Age' with 30"
-- Change data types: "Change column 'Price' to float" 
+- Change data types: "Change column 'Price' to float"
 - Normalize columns: "Normalize column 'Score'"
-- Get dataset info: "Show dataset information"
+- Standardize columns: "Standardize column 'Marks'"
+- Remove duplicates: "Remove duplicate rows"
+- Drop rows with missing values: "Drop rows with missing data"
 
 Rules:
 - Only handle data transformation tasks
-- Use tools appropriately 
-- Always include the file_path parameter when calling tools
-- Be concise and clear in your responses"""),
+- Always use tools responsibly
+- If a request is truly unsupported, reply with 'This request is outside my scope.'"""),
             ("human", "{input}"),
             ("placeholder", "{agent_scratchpad}")
         ])
@@ -62,9 +63,10 @@ Rules:
             if not os.path.exists(file_path):
                 return f"Error: File {file_path} not found"
 
+            full_input = f"File: {file_path}\nUser Request: {question}"
+            
             result = self.executor.invoke({
-                "input": f"File path: {file_path}\nUser request: {question}",
-                "file_path": file_path
+                "input": full_input
             })
 
             output = result.get("output", "")

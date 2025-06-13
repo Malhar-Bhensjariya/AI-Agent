@@ -94,41 +94,53 @@ def get_dataframe_info(file_path: str) -> str:
         return f"Error getting dataframe info: {str(e)}"
 
 @tool
-def get_column_info(file_path: str, column_name: str) -> str:
-    """Get detailed information about a specific column.
+def standardize_column(file_path: str, column_name: str) -> str:
+    """Standardize a numeric column using Z-score.
     
     Args:
         file_path: Path to the CSV/Excel file
-        column_name: Name of the column to analyze
+        column_name: Name of the column to standardize
     """
     try:
         if not os.path.exists(file_path):
             return f"Error: File {file_path} not found"
-        
+
         transformer = DataTransformer(file_path)
-        info = transformer.get_column_info(column_name)
-        
-        # Format the column info as a readable string
-        if isinstance(info, dict):
-            result = []
-            result.append(f"Column: {info.get('name', 'Unknown')}")
-            result.append(f"Data Type: {info.get('dtype', 'Unknown')}")
-            result.append(f"Non-null Count: {info.get('non_null_count', 'Unknown')}")
-            result.append(f"Null Count: {info.get('null_count', 'Unknown')}")
-            result.append(f"Unique Values: {info.get('unique_count', 'Unknown')}")
-            
-            # Add numeric statistics if available
-            if 'min' in info:
-                result.append(f"Min: {info['min']}")
-                result.append(f"Max: {info['max']}")
-                result.append(f"Mean: {info.get('mean', 'N/A'):.4f}" if info.get('mean') is not None else "Mean: N/A")
-                result.append(f"Std Dev: {info.get('std', 'N/A'):.4f}" if info.get('std') is not None else "Std Dev: N/A")
-            
-            return "\n".join(result)
-        else:
-            return str(info)
+        return transformer.standardize_column(column_name)
     except Exception as e:
-        return f"Error getting column info: {str(e)}"
+        return f"Error standardizing column: {str(e)}"
+
+@tool
+def remove_duplicate_rows(file_path: str) -> str:
+    """Remove duplicate rows from the dataset.
+    
+    Args:
+        file_path: Path to the CSV/Excel file
+    """
+    try:
+        if not os.path.exists(file_path):
+            return f"Error: File {file_path} not found"
+
+        transformer = DataTransformer(file_path)
+        return transformer.remove_duplicates()
+    except Exception as e:
+        return f"Error removing duplicates: {str(e)}"
+
+@tool
+def drop_rows_with_missing_values(file_path: str) -> str:
+    """Drop all rows that contain any missing values.
+    
+    Args:
+        file_path: Path to the CSV/Excel file
+    """
+    try:
+        if not os.path.exists(file_path):
+            return f"Error: File {file_path} not found"
+
+        transformer = DataTransformer(file_path)
+        return transformer.drop_missing_rows()
+    except Exception as e:
+        return f"Error dropping rows with missing values: {str(e)}"
 
 def get_transformer_tools():
     """Return all available transformer tools"""
@@ -136,6 +148,7 @@ def get_transformer_tools():
         fill_missing_values,
         change_column_dtype,
         normalize_column,
-        get_dataframe_info,
-        get_column_info
+        standardize_column,
+        remove_duplicate_rows,
+        drop_rows_with_missing_values
     ]

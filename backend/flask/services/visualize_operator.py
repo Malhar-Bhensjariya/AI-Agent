@@ -3,6 +3,7 @@ from tools.plot_generator import PlotGenerator
 from tools.file_handler import load_file_as_dataframe
 from utils.logger import log
 import json
+import pandas as pd
 
 @tool
 def create_bar_plot(file_path: str, x_column: str, y_column: str) -> str:

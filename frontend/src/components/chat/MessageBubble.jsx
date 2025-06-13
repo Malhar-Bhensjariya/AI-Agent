@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ChartView from '../chart/ChartView'
 
 const MessageBubble = ({ message }) => {
+  const [showRawData, setShowRawData] = useState(false)
   const isUser = message.sender === 'user'
   const isAgent = message.sender === 'agent'
 
@@ -10,6 +11,10 @@ const MessageBubble = ({ message }) => {
       hour: '2-digit', 
       minute: '2-digit' 
     })
+  }
+
+  const toggleRawData = () => {
+    setShowRawData(!showRawData)
   }
 
   return (
@@ -26,7 +31,9 @@ const MessageBubble = ({ message }) => {
           <div className={`rounded-2xl px-4 py-2 ${
             isUser 
               ? 'bg-blue-600 text-white' 
-              : 'bg-gray-100 text-gray-800'
+              : message.error 
+                ? 'bg-red-100 text-red-800 border border-red-200'
+                : 'bg-gray-100 text-gray-800'
           }`}>
             {/* File attachment preview */}
             {message.file && (
@@ -44,8 +51,28 @@ const MessageBubble = ({ message }) => {
             
             {/* Message text */}
             {message.text && (
-              <div className="whitespace-pre-wrap">
+              <div className="whitespace-pre-wrap font-mono text-sm">
                 {message.text}
+              </div>
+            )}
+            
+            {/* Analysis data controls for agent messages */}
+            {isAgent && message.rawAnalysis && (
+              <div className="mt-3 pt-2 border-t border-gray-200">
+                <button 
+                  onClick={toggleRawData}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                  {showRawData ? 'Hide' : 'Show'} Raw Data
+                </button>
+                
+                {showRawData && (
+                  <div className="mt-2 p-2 bg-gray-50 rounded border text-xs">
+                    <pre className="whitespace-pre-wrap overflow-x-auto">
+                      {JSON.stringify(message.rawAnalysis, null, 2)}
+                    </pre>
+                  </div>
+                )}
               </div>
             )}
             
@@ -55,12 +82,28 @@ const MessageBubble = ({ message }) => {
                 <ChartView data={message.chartData} />
               </div>
             )}
+
+            {/* Table data preview */}
+            {isAgent && message.tableData && (
+              <div className="mt-3 p-2 bg-gray-50 rounded border">
+                <div className="text-xs text-gray-600 mb-1">Table Data Preview:</div>
+                <div className="text-xs">
+                  {message.tableData.length} rows available
+                  <button className="ml-2 text-blue-600 hover:text-blue-800 underline">
+                    View in Table
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
         {/* Timestamp */}
         <div className={`text-xs text-gray-500 mt-1 ${isUser ? 'text-right' : 'text-left'}`}>
           {formatTime(message.timestamp)}
+          {message.regenerated && (
+            <span className="ml-1 text-blue-500">↻</span>
+          )}
         </div>
       </div>
     </div>

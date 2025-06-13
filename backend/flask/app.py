@@ -119,7 +119,6 @@ def chat():
             
             # Handle file upload - FIXED: Properly save the file
             if 'file' in request.files:
-                print("file: ", request.files['file'])
                 file = request.files['file']
                 if file and file.filename and allowed_file(file.filename):
                     try:
@@ -174,8 +173,8 @@ def chat():
                     "column_order": df.columns.tolist()  # Explicitly include column order
                 }
                 
-                log(f"Returning updated file data: {len(df)} rows, {len(df.columns)} columns", "INFO")
-                log(f"Column order preserved: {df.columns.tolist()}", "INFO")
+                # log(f"Returning updated file data: {len(df)} rows, {len(df.columns)} columns", "INFO")
+                # log(f"Column order preserved: {df.columns.tolist()}", "INFO")
             except Exception as e:
                 log(f"Error reading updated file: {str(e)}", "ERROR")
                 response_data["error"] = f"Failed to read updated file: {str(e)}"

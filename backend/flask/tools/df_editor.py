@@ -140,38 +140,32 @@ class DataEditor:
             "file_path": self.file_path
         }
 
-    def get_summary(self) -> Dict:
-        """Get comprehensive DataFrame summary with preserved column order"""
-        # Use ordered DataFrame for summary
-        ordered_df = self.df[self.original_columns] if all(col in self.df.columns for col in self.original_columns) else self.df
-        
-        numeric_cols = ordered_df.select_dtypes(include=['number']).columns.tolist()
-        categorical_cols = ordered_df.select_dtypes(include=['object']).columns.tolist()
-        
-        summary = {
-            "basic_info": {
-                "file_path": self.file_path,
-                "columns": ordered_df.columns.tolist(),  # Ordered columns
-                "shape": ordered_df.shape,
-                "dtypes": ordered_df.dtypes.astype(str).to_dict(),
-                "missing_values": ordered_df.isnull().sum().to_dict(),
-                "numeric_columns": numeric_cols,
-                "categorical_columns": categorical_cols
-            }
-        }
-        
-        # Add statistical summary
-        if not ordered_df.empty:
-            try:
-                stats = ordered_df.describe(include="all").fillna("").to_dict()
-                summary["statistics"] = stats
-            except Exception as e:
-                summary["statistics"] = f"Error generating stats: {str(e)}"
-        
-        return summary
-
     def get_cell_value(self, user_row: int, column_name: str) -> Union[str, int, float]:
         """Get value from specific cell"""
         idx = self._validate_row_index(user_row)
         self._validate_column(column_name)
         return self.df.at[idx, column_name]
+    
+    def rename_column(self, old_name: str, new_name: str) -> str:
+        """Rename a column, ensuring no conflict and preserving original order"""
+        if old_name not in self.df.columns:
+            raise ValueError(f"Column '{old_name}' not found. Available columns: {list(self.df.columns)}")
+
+        if new_name in self.df.columns:
+            raise ValueError(f"Column '{new_name}' already exists.")
+
+        try:
+            self.df = self.df.rename(columns={old_name: new_name})
+
+            # Update original_columns if needed
+            if old_name in self.original_columns:
+                idx = self.original_columns.index(old_name)
+                self.original_columns[idx] = new_name
+
+            self._save_dataframe()
+            log(f"Renamed column '{old_name}' to '{new_name}'", level="INFO")
+            return f"Renamed column '{old_name}' to '{new_name}'"
+        except Exception as e:
+            log(f"Error renaming column: {e}", level="ERROR")
+            raise ValueError(f"Failed to rename column: {str(e)}")
+

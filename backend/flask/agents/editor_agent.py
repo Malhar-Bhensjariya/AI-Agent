@@ -33,10 +33,11 @@ IMPORTANT RULES:
 4. When adding rows, ensure values match the column count and order
 5. Always provide clear feedback about what was changed
 6. If an operation fails, explain why and suggest alternatives
+7. Never return the file path in the response
 
 Available operations:
-- View file summary and preview
 - Add/remove rows and columns  
+- Rename column
 - Modify individual cells or entire rows
 - Get file statistics and structure
 

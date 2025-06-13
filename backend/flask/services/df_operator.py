@@ -96,37 +96,6 @@ def set_row(file_path: str, row_index: int, values: List[Any]) -> str:
     except Exception as e:
         return f"Error setting row: {str(e)}"
 
-@tool
-def get_summary(file_path: str) -> str:
-    """Get comprehensive summary of the CSV/Excel file including structure and statistics.
-    
-    Args:
-        file_path: Path to the CSV/Excel file
-    """
-    try:
-        editor = DataEditor(file_path)
-        summary = editor.get_summary()
-        
-        # Format summary for better readability
-        basic = summary["basic_info"]
-        result = f"""File Summary for: {basic['file_path']}
-        
-Shape: {basic['shape'][0]} rows × {basic['shape'][1]} columns
-Columns: {', '.join(basic['columns'])}
-
-Data Types:
-{chr(10).join([f'  {col}: {dtype}' for col, dtype in basic['dtypes'].items()])}
-
-Missing Values:
-{chr(10).join([f'  {col}: {count}' for col, count in basic['missing_values'].items() if count > 0]) or '  None'}
-
-Numeric Columns: {', '.join(basic['numeric_columns']) if basic['numeric_columns'] else 'None'}
-Categorical Columns: {', '.join(basic['categorical_columns']) if basic['categorical_columns'] else 'None'}
-"""
-        return result
-        
-    except Exception as e:
-        return f"Error getting summary: {str(e)}"
 
 @tool
 def get_preview(file_path: str, num_rows: int = 5) -> str:
@@ -153,6 +122,23 @@ Data:
         
     except Exception as e:
         return f"Error getting preview: {str(e)}"
+    
+@tool
+def rename_column(file_path: str, old_name: str, new_name: str) -> str:
+    """Rename a column in the CSV/Excel file.
+    
+    Args:
+        file_path: Path to the CSV/Excel file
+        old_name: Current name of the column
+        new_name: New name for the column
+    """
+    try:
+        editor = DataEditor(file_path)
+        message = editor.rename_column(old_name, new_name)
+        return f"{message}. File updated."
+    except Exception as e:
+        return f"Error renaming column: {str(e)}"
+
 
 def get_csv_tools():
     """Return all available DataFrame editing tools"""
@@ -163,6 +149,6 @@ def get_csv_tools():
         add_row,
         set_cell,
         set_row,
-        get_summary,
         get_preview,
+        rename_column
     ]
