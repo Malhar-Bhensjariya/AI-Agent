@@ -14,12 +14,16 @@ def create_bar_plot(file_path: str, x_column: str, y_column: str) -> str:
         chart_config = plot_generator.generate_bar_plot(x_column, y_column)
         log(f"Interactive bar plot configuration created for {x_column} vs {y_column} from {file_path}", "INFO")
         
-        # Return structured response for the agent
-        return f"Bar plot configuration generated successfully for '{y_column}' vs '{x_column}'. Chart data: {chart_config}"
+        return json.dumps({
+            "type": "chart", 
+            "chart_type": "bar", 
+            "chart_config": chart_config,
+            "message": f"Bar plot configuration generated successfully for '{y_column}' vs '{x_column}'"
+        })
     except Exception as e:
         error_msg = f"Error creating bar plot: {str(e)}"
         log(error_msg, "ERROR")
-        return error_msg
+        return json.dumps({"type": "error", "message": error_msg})
 
 @tool
 def create_line_plot(file_path: str, x_column: str, y_column: str) -> str:
@@ -30,11 +34,16 @@ def create_line_plot(file_path: str, x_column: str, y_column: str) -> str:
         chart_config = plot_generator.generate_line_plot(x_column, y_column)
         log(f"Interactive line plot configuration created for {x_column} vs {y_column} from {file_path}", "INFO")
         
-        return f"Line plot configuration generated successfully for '{y_column}' vs '{x_column}'. Chart data: {chart_config}"
+        return json.dumps({
+            "type": "chart", 
+            "chart_type": "line", 
+            "chart_config": chart_config,
+            "message": f"Line plot configuration generated successfully for '{y_column}' vs '{x_column}'"
+        })
     except Exception as e:
         error_msg = f"Error creating line plot: {str(e)}"
         log(error_msg, "ERROR")
-        return error_msg
+        return json.dumps({"type": "error", "message": error_msg})
 
 @tool
 def create_scatter_plot(file_path: str, x_column: str, y_column: str) -> str:
@@ -45,11 +54,16 @@ def create_scatter_plot(file_path: str, x_column: str, y_column: str) -> str:
         chart_config = plot_generator.generate_scatter_plot(x_column, y_column)
         log(f"Interactive scatter plot configuration created for {x_column} vs {y_column} from {file_path}", "INFO")
         
-        return f"Scatter plot configuration generated successfully for '{y_column}' vs '{x_column}'. Chart data: {chart_config}"
+        return json.dumps({
+            "type": "chart", 
+            "chart_type": "scatter", 
+            "chart_config": chart_config,
+            "message": f"Scatter plot configuration generated successfully for '{y_column}' vs '{x_column}'"
+        })
     except Exception as e:
         error_msg = f"Error creating scatter plot: {str(e)}"
         log(error_msg, "ERROR")
-        return error_msg
+        return json.dumps({"type": "error", "message": error_msg})
 
 @tool
 def create_pie_chart(file_path: str, column_name: str, max_categories: int = 10) -> str:
@@ -60,11 +74,16 @@ def create_pie_chart(file_path: str, column_name: str, max_categories: int = 10)
         chart_config = plot_generator.generate_pie_chart(column_name, max_categories=max_categories)
         log(f"Interactive pie chart configuration created for {column_name} from {file_path}", "INFO")
         
-        return f"Pie chart configuration generated successfully for '{column_name}'. Chart data: {chart_config}"
+        return json.dumps({
+            "type": "chart", 
+            "chart_type": "pie", 
+            "chart_config": chart_config,
+            "message": f"Pie chart configuration generated successfully for '{column_name}'"
+        })
     except Exception as e:
         error_msg = f"Error creating pie chart: {str(e)}"
         log(error_msg, "ERROR")
-        return error_msg
+        return json.dumps({"type": "error", "message": error_msg})
 
 @tool
 def create_histogram(file_path: str, column_name: str, bins: int = 30) -> str:
@@ -75,11 +94,16 @@ def create_histogram(file_path: str, column_name: str, bins: int = 30) -> str:
         chart_config = plot_generator.generate_histogram(column_name, bins)
         log(f"Interactive histogram configuration created for {column_name} from {file_path}", "INFO")
         
-        return f"Histogram configuration generated successfully for '{column_name}'. Chart data: {chart_config}"
+        return json.dumps({
+            "type": "chart", 
+            "chart_type": "histogram", 
+            "chart_config": chart_config,
+            "message": f"Histogram configuration generated successfully for '{column_name}'"
+        })
     except Exception as e:
         error_msg = f"Error creating histogram: {str(e)}"
         log(error_msg, "ERROR")
-        return error_msg
+        return json.dumps({"type": "error", "message": error_msg})
 
 @tool
 def get_plot_recommendations(file_path: str) -> str:
@@ -88,17 +112,16 @@ def get_plot_recommendations(file_path: str) -> str:
         df = load_file_as_dataframe(file_path)
         plot_generator = PlotGenerator(df)
         recommendations = plot_generator.get_plot_recommendations()
-        
         if not recommendations:
-            return "No specific plot recommendations available for this data."
-        
-        result = "Plot recommendations for your data:\n" + "\n".join(f"• {rec}" for rec in recommendations)
-        log(f"Plot recommendations generated for {file_path}", "INFO")
-        return result
+            message = "No specific plot recommendations available for this data."
+        else:
+            message = "Plot recommendations for your data:\n" + "\n".join(f"• {rec}" for rec in recommendations)
+
+        return json.dumps({"type": "info", "message": message})
     except Exception as e:
         error_msg = f"Error getting plot recommendations: {str(e)}"
         log(error_msg, "ERROR")
-        return error_msg
+        return json.dumps({"type": "error", "message": error_msg})
 
 @tool
 def get_data_summary_for_plotting(file_path: str) -> str:
@@ -106,40 +129,28 @@ def get_data_summary_for_plotting(file_path: str) -> str:
     try:
         df = load_file_as_dataframe(file_path)
         
-        # Basic info
         total_rows, total_cols = df.shape
         numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
         categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
         
-        summary = f"Data Summary for Plotting:\n"
-        summary += f"• Total rows: {total_rows}, Total columns: {total_cols}\n"
-        summary += f"• Numeric columns ({len(numeric_cols)}): {', '.join(numeric_cols) if numeric_cols else 'None'}\n"
-        summary += f"• Categorical columns ({len(categorical_cols)}): {', '.join(categorical_cols) if categorical_cols else 'None'}\n"
+        summary = {
+            "type": "info",
+            "message": f"Data Summary for Plotting:\n"
+                      f"• Total rows: {total_rows}\n"
+                      f"• Total columns: {total_cols}\n"
+                      f"• Numeric columns: {', '.join(numeric_cols) if numeric_cols else 'None'}\n"
+                      f"• Categorical columns: {', '.join(categorical_cols) if categorical_cols else 'None'}",
+            "total_rows": total_rows,
+            "total_columns": total_cols,
+            "numeric_columns": numeric_cols,
+            "categorical_columns": categorical_cols
+        }
         
-        # Add info about categorical columns
-        if categorical_cols:
-            summary += f"\nCategorical column details:\n"
-            for col in categorical_cols[:5]:  # Limit to first 5 columns
-                unique_count = df[col].nunique()
-                summary += f"• '{col}': {unique_count} unique values\n"
-                if unique_count <= 10:
-                    sample_values = df[col].value_counts().head().index.tolist()
-                    summary += f"  Sample values: {', '.join(map(str, sample_values))}\n"
-        
-        # Add info about numeric columns
-        if numeric_cols:
-            summary += f"\nNumeric column ranges:\n"
-            for col in numeric_cols[:5]:  # Limit to first 5 columns
-                min_val = df[col].min()
-                max_val = df[col].max()
-                summary += f"• '{col}': {min_val:.2f} to {max_val:.2f}\n"
-        
-        log(f"Data summary generated for plotting from {file_path}", "INFO")
-        return summary
+        return json.dumps(summary)
     except Exception as e:
         error_msg = f"Error getting data summary: {str(e)}"
         log(error_msg, "ERROR")
-        return error_msg
+        return json.dumps({"type": "error", "message": error_msg})
 
 @tool
 def create_multi_series_chart(file_path: str, x_column: str, y_columns: list, chart_type: str = "line") -> str:
@@ -147,29 +158,22 @@ def create_multi_series_chart(file_path: str, x_column: str, y_columns: list, ch
     try:
         df = load_file_as_dataframe(file_path)
         
-        # Validate columns
-        missing_cols = [col for col in [x_column] + y_columns if col not in df.columns]
-        if missing_cols:
-            raise ValueError(f"Columns {missing_cols} not found in data. Available columns: {list(df.columns)}")
+        missing = [col for col in [x_column] + y_columns if col not in df.columns]
+        if missing:
+            raise ValueError(f"Columns {missing} not found in data.")
         
-        # Sort by x column
         df_sorted = df.sort_values(x_column)
-        
-        # Limit data points for performance
         if len(df_sorted) > 1000:
-            log(f"Warning: Too many data points ({len(df_sorted)}), sampling 1000 points", "WARNING")
-            step = len(df_sorted) // 1000
-            df_sorted = df_sorted.iloc[::step]
-        
-        # Prepare data
+            df_sorted = df_sorted.iloc[::len(df_sorted) // 1000]
+
         labels = [str(val) for val in df_sorted[x_column]]
-        
-        # Colors for different series
+
         colors = ['#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
-        
+
         datasets = []
         for i, y_col in enumerate(y_columns):
             color = colors[i % len(colors)]
+
             dataset = {
                 'label': y_col,
                 'data': [float(val) if pd.notna(val) else None for val in df_sorted[y_col]],
@@ -179,7 +183,7 @@ def create_multi_series_chart(file_path: str, x_column: str, y_columns: list, ch
                 'fill': False if chart_type == 'line' else True
             }
             datasets.append(dataset)
-        
+
         chart_config = {
             'type': chart_type,
             'data': {
@@ -219,14 +223,16 @@ def create_multi_series_chart(file_path: str, x_column: str, y_columns: list, ch
             }
         }
         
-        chart_config_json = json.dumps(chart_config)
-        log(f"Multi-series {chart_type} chart configuration created for {y_columns} vs {x_column} from {file_path}", "INFO")
-        
-        return f"Multi-series {chart_type} chart configuration generated successfully. Chart data: {chart_config_json}"
+        return json.dumps({
+            "type": "chart", 
+            "chart_type": chart_type, 
+            "chart_config": chart_config,
+            "message": f"Multi-series {chart_type} chart configuration generated successfully for {y_columns} vs {x_column}"
+        })
     except Exception as e:
         error_msg = f"Error creating multi-series chart: {str(e)}"
         log(error_msg, "ERROR")
-        return error_msg
+        return json.dumps({"type": "error", "message": error_msg})
 
 def get_visualization_tools():
     """Return all available visualization tools."""

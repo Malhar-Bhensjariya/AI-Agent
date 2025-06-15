@@ -105,7 +105,7 @@ class PlotGenerator:
             }
 
             log(f"Bar plot configuration generated for {x_col} vs {y_col}", "INFO")
-            return json.dumps(chart_config)
+            return chart_config  # Return dict directly, not JSON string
 
         except Exception as e:
             log(f"Error generating bar plot: {str(e)}", "ERROR")
@@ -183,7 +183,7 @@ class PlotGenerator:
             }
 
             log(f"Line plot configuration generated for {x_col} vs {y_col}", "INFO")
-            return json.dumps(chart_config)
+            return chart_config  # Return dict directly, not JSON string
 
         except Exception as e:
             log(f"Error generating line plot: {str(e)}", "ERROR")
@@ -246,7 +246,7 @@ class PlotGenerator:
             }
 
             log(f"Pie chart configuration generated for {column}", "INFO")
-            return json.dumps(chart_config)
+            return chart_config  # Return dict directly, not JSON string
 
         except Exception as e:
             log(f"Error generating pie chart: {str(e)}", "ERROR")
@@ -321,7 +321,7 @@ class PlotGenerator:
             }
 
             log(f"Histogram configuration generated for {column}", "INFO")
-            return json.dumps(chart_config)
+            return chart_config  # Return dict directly, not JSON string
 
         except Exception as e:
             log(f"Error generating histogram: {str(e)}", "ERROR")
@@ -396,7 +396,7 @@ class PlotGenerator:
             }
 
             log(f"Scatter plot configuration generated for {x_col} vs {y_col}", "INFO")
-            return json.dumps(chart_config)
+            return chart_config  # Return dict directly, not JSON string
 
         except Exception as e:
             log(f"Error generating scatter plot: {str(e)}", "ERROR")

@@ -39,6 +39,111 @@ def read_file_with_preserved_order(file_path: str) -> pd.DataFrame:
         log(f"Error reading file {file_path}: {str(e)}", "ERROR")
         raise
 
+def _validate_chart_config(chart_config: dict) -> bool:
+    """Validate that the chart config is properly formatted for Chart.js"""
+    if not isinstance(chart_config, dict):
+        return False
+    
+    # Check required Chart.js fields
+    required_fields = ['type', 'data']
+    if not all(field in chart_config for field in required_fields):
+        log(f"Chart config missing required fields: {required_fields}", "WARNING")
+        return False
+    
+    # Validate chart type
+    valid_types = ['bar', 'line', 'scatter', 'pie', 'doughnut', 'radar', 'polarArea']
+    if chart_config.get('type') not in valid_types:
+        log(f"Invalid chart type: {chart_config.get('type')}", "WARNING")
+        return False
+    
+    # Validate data structure
+    data = chart_config.get('data', {})
+    if not isinstance(data, dict):
+        log("Chart data is not a dictionary", "WARNING")
+        return False
+    
+    # For most chart types, we need datasets
+    if chart_config.get('type') != 'pie':
+        if 'datasets' not in data or not isinstance(data['datasets'], list):
+            log("Chart data missing datasets array", "WARNING")
+            return False
+    
+    return True
+
+def _extract_chart_from_response(result) -> dict:
+    """Extract chart configuration from various response formats"""
+    chart_data = None
+    
+    # Case 1: Result is already a structured dict from visualization agent
+    if isinstance(result, dict):
+        if result.get('type') == 'chart' and result.get('chart_config'):
+            chart_config = result['chart_config']
+            if _validate_chart_config(chart_config):
+                return {
+                    'chart_config': chart_config,
+                    'chart_type': result.get('chart_type', chart_config.get('type', 'bar')),
+                    'message': result.get('message', 'Chart created successfully'),
+                    'success': result.get('success', True)
+                }
+        return None
+    
+    # Case 2: Result is a JSON string
+    if isinstance(result, str):
+        try:
+            # Try to parse as JSON first
+            if result.strip().startswith('{'):
+                parsed = json.loads(result)
+                if isinstance(parsed, dict) and parsed.get('type') == 'chart':
+                    chart_config = parsed.get('chart_config')
+                    if chart_config and _validate_chart_config(chart_config):
+                        return {
+                            'chart_config': chart_config,
+                            'chart_type': parsed.get('chart_type', chart_config.get('type', 'bar')),
+                            'message': parsed.get('message', 'Chart created successfully'),
+                            'success': True
+                        }
+        except json.JSONDecodeError:
+            pass
+        
+        # Case 3: Look for chart config markers in text
+        import re
+        config_pattern = r'CHART_CONFIG_START\s*(\{.*?\})\s*CHART_CONFIG_END'
+        match = re.search(config_pattern, result, re.DOTALL)
+        
+        if match:
+            try:
+                json_str = match.group(1)
+                chart_config = json.loads(json_str)
+                if _validate_chart_config(chart_config):
+                    return {
+                        'chart_config': chart_config,
+                        'chart_type': chart_config.get('type', 'bar'),
+                        'message': 'Chart created successfully',
+                        'success': True
+                    }
+            except json.JSONDecodeError:
+                pass
+        
+        # Case 4: Look for JSON code blocks
+        json_pattern = r'```json\s*(\{.*?\})\s*```'
+        match = re.search(json_pattern, result, re.DOTALL)
+        
+        if match:
+            try:
+                json_str = match.group(1)
+                chart_config = json.loads(json_str)
+                if _validate_chart_config(chart_config):
+                    return {
+                        'chart_config': chart_config,
+                        'chart_type': chart_config.get('type', 'bar'),
+                        'message': 'Chart created successfully',
+                        'success': True
+                    }
+            except json.JSONDecodeError:
+                pass
+    
+    return None
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
@@ -117,7 +222,7 @@ def chat():
             user_message = request.form.get('message', '').strip()
             file_path = None
             
-            # Handle file upload - FIXED: Properly save the file
+            # Handle file upload
             if 'file' in request.files:
                 file = request.files['file']
                 if file and file.filename and allowed_file(file.filename):
@@ -149,7 +254,10 @@ def chat():
         # Execute agent (backend handles which agent to use)
         result = execute_agent(file_path=file_path, user_prompt=user_message)
         
-        # Parse the response and determine type
+        log(f"Agent result type: {type(result)}", "INFO")
+        log(f"Agent result preview: {str(result)[:200]}...", "INFO")
+        
+        # Initialize response structure
         response_data = {
             "success": True,
             "message": user_message
@@ -165,52 +273,56 @@ def chat():
                 
                 # Ensure consistent data structure with preserved order
                 response_data["updated_data"] = df.to_dict('records')
-                #print("\n\n\n", response_data["updated_data"])
                 response_data["headers"] = df.columns.tolist()
                 response_data["file_info"] = {
                     "rows": len(df),
                     "columns": len(df.columns),
-                    "column_order": df.columns.tolist()  # Explicitly include column order
+                    "column_order": df.columns.tolist()
                 }
                 
-                # log(f"Returning updated file data: {len(df)} rows, {len(df.columns)} columns", "INFO")
-                # log(f"Column order preserved: {df.columns.tolist()}", "INFO")
             except Exception as e:
                 log(f"Error reading updated file: {str(e)}", "ERROR")
                 response_data["error"] = f"Failed to read updated file: {str(e)}"
 
-        # Determine response type based on result
-        if _is_json_string(result):
-            try:
-                # Try to parse as chart configuration
-                chart_config = json.loads(result)
-                response_data.update({
-                    "type": "chart",
-                    "chart_config": chart_config,
-                    "text": "Chart generated from your data"
-                })
-                log("Chart response generated", "INFO")
-            except json.JSONDecodeError:
-                # If JSON parsing fails, treat as text
-                response_data.update({
-                    "type": "text",
-                    "text": result
-                })
-        else:
-            # Regular text response
+        # Try to extract chart configuration from result
+        chart_data = _extract_chart_from_response(result)
+        
+        if chart_data and chart_data.get('success'):
+            # This is a successful chart response
             response_data.update({
-                "type": "text", 
-                "text": result
+                "type": "chart",
+                "chart_config": chart_data["chart_config"],
+                "chart_type": chart_data["chart_type"],
+                "text": chart_data["message"],
+                "success": True
+            })
+            log(f"Chart response generated successfully: {chart_data['chart_type']}", "INFO")
+            
+        else:
+            # This is a text response or failed chart
+            if isinstance(result, dict) and 'message' in result:
+                text_response = result['message']
+            elif isinstance(result, str):
+                text_response = result
+            else:
+                text_response = str(result)
+            
+            response_data.update({
+                "type": "text",
+                "text": text_response,
+                "success": True
             })
             log("Text response generated", "INFO")
 
+        log(f"Final response type: {response_data.get('type')}", "INFO")
         return jsonify(response_data)
 
     except Exception as e:
         log(f"Chat processing error: {str(e)}", "ERROR")
         return jsonify({
             "success": False,
-            "error": f"Processing failed: {str(e)}"
+            "error": f"Processing failed: {str(e)}",
+            "type": "error"
         }), 500
 
 @app.route('/files/<path:filename>', methods=['GET'])
@@ -223,26 +335,6 @@ def serve_file(filename):
             "success": False,
             "error": "File not found"
         }), 404
-
-# Helper functions
-def _is_json_string(text: str) -> bool:
-    """Check if a string is valid JSON"""
-    if not isinstance(text, str):
-        return False
-    
-    text = text.strip()
-    if not text:
-        return False
-        
-    if not ((text.startswith('{') and text.endswith('}')) or 
-            (text.startswith('[') and text.endswith(']'))):
-        return False
-    
-    try:
-        json.loads(text)
-        return True
-    except (json.JSONDecodeError, TypeError):
-        return False
 
 # Error handlers
 @app.errorhandler(413)

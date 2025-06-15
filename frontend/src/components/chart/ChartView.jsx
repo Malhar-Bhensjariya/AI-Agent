@@ -49,6 +49,9 @@ const ChartView = ({ data, type = 'bar' }) => {
       
       let chartConfig = null
       
+      console.log('ChartView received data:', data)
+      console.log('ChartView data type:', typeof data)
+      
       // Handle different data formats from backend
       if (typeof data === 'string') {
         try {
@@ -58,6 +61,7 @@ const ChartView = ({ data, type = 'bar' }) => {
         }
       } else if (data.config) {
         // Handle if data is wrapped in config property (from useAgentResponse)
+        console.log('Using data.config:', data.config)
         if (typeof data.config === 'string') {
           chartConfig = JSON.parse(data.config)
         } else {
@@ -80,12 +84,20 @@ const ChartView = ({ data, type = 'bar' }) => {
 
       // Validate chart config structure
       if (!chartConfig || typeof chartConfig !== 'object') {
+        console.error('Invalid chart configuration:', chartConfig)
         throw new Error('Invalid chart configuration')
       }
 
+      console.log('Final chart config:', chartConfig)
+
       // Ensure we have required Chart.js structure
       if (!chartConfig.type) {
-        chartConfig.type = type
+        chartConfig.type = type || data.type || 'bar'
+      }
+
+      // Validate required Chart.js fields
+      if (!chartConfig.data) {
+        throw new Error('Chart configuration missing data property')
       }
 
       // Handle tooltip callbacks that come as strings from Python

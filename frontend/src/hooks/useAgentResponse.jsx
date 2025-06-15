@@ -36,12 +36,15 @@ export const useAgentResponse = () => {
       // Handle different response formats
       if (typeof response === 'string') {
         displayText = response
+      } else if (response.type === 'chart') {
+        // For chart responses, use the message field
+        displayText = response.text || response.message || 'Chart generated successfully'
+      } else if (response.text) {
+        displayText = response.text
       } else if (response.message) {
         displayText = response.message
       } else if (response.response) {
         displayText = response.response
-      } else if (response.text) {
-        displayText = response.text
       } else {
         // If response is an object without clear text field, stringify it
         displayText = JSON.stringify(response, null, 2)
@@ -65,13 +68,17 @@ export const useAgentResponse = () => {
 
       // Handle chart data from backend
       let chartData = null
-      if (response.chart_config) {
+      if (response.type === 'chart' && response.chart_config) {
         chartData = {
           config: response.chart_config,
-          type: response.chart_type || 'bar'
+          type: response.chart_type || response.chart_config.type || 'bar'
         }
+        // For chart responses, use the message as display text
+        displayText = response.text || response.message || 'Chart generated successfully'
+        console.log('Chart data prepared:', chartData)
       } else if (response.chartData || response.chart_data) {
         chartData = response.chartData || response.chart_data
+        console.log('Legacy chart data format:', chartData)
       }
 
       // Add agent's message to chat
@@ -323,12 +330,15 @@ export const useAgentResponse = () => {
       // Handle different response formats
       if (typeof response === 'string') {
         displayText = response
+      } else if (response.type === 'chart') {
+        // For chart responses, use the message field
+        displayText = response.text || response.message || 'Chart generated successfully'
+      } else if (response.text) {
+        displayText = response.text
       } else if (response.message) {
         displayText = response.message
       } else if (response.response) {
         displayText = response.response
-      } else if (response.text) {
-        displayText = response.text
       } else {
         // If response is an object without clear text field, stringify it
         displayText = JSON.stringify(response, null, 2)
@@ -351,13 +361,17 @@ export const useAgentResponse = () => {
 
       // Handle chart data from backend for regenerated responses
       let chartData = null
-      if (response.chart_config) {
+      if (response.type === 'chart' && response.chart_config) {
         chartData = {
           config: response.chart_config,
-          type: response.chart_type || 'bar'
+          type: response.chart_type || response.chart_config.type || 'bar'
         }
+        // For chart responses, use the message as display text
+        displayText = response.text || response.message || 'Chart generated successfully'
+        console.log('Regenerated chart data prepared:', chartData)
       } else if (response.chartData || response.chart_data) {
         chartData = response.chartData || response.chart_data
+        console.log('Regenerated legacy chart data format:', chartData)
       }
 
       const regeneratedMessage = {

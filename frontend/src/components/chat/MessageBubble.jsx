@@ -84,11 +84,11 @@ const MessageBubble = ({ message }) => {
             )}
 
             {/* Table data preview */}
-            {isAgent && message.tableData && (
+            {isAgent && message.chartData && (
               <div className="mt-3 p-2 bg-gray-50 rounded border">
                 <div className="text-xs text-gray-600 mb-1">Table Data Preview:</div>
                 <div className="text-xs">
-                  {message.tableData.length} rows available
+                  {message.chartData?.labels?.length} points available
                   <button className="ml-2 text-blue-600 hover:text-blue-800 underline">
                     View in Table
                   </button>

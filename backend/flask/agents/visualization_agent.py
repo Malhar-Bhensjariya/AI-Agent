@@ -59,9 +59,12 @@ Example requests:
 - "Create scatter plot of Height vs Weight"
 - "Make a multi-series line chart with Sales and Profit over Time"
 
-The response will include Chart.js configuration JSON that the frontend can use to render interactive charts.
+When you receive a chart configuration from the tools, you MUST return it in the following format:
+CHART_CONFIG_START
+{{chart_config_json_here}}
+CHART_CONFIG_END
 
-Always extract and return the chart configuration JSON from tool responses for the frontend to use."""),
+This format helps the system extract the chart configuration properly."""),
             ("human", "{input}"),
             ("placeholder", "{agent_scratchpad}")
         ])
@@ -73,35 +76,63 @@ Always extract and return the chart configuration JSON from tool responses for t
             tools=self.tools,
             verbose=False,
             handle_parsing_errors=True,
-            return_intermediate_steps=False,
+            return_intermediate_steps=True,  # Enable to capture tool outputs
             max_iterations=3
         )
 
-    def _extract_chart_config(self, tool_response: str) -> dict:
-        """Extract Chart.js configuration JSON from tool response"""
+    def _extract_chart_config(self, text: str) -> dict:
+        """Extract Chart.js configuration JSON from text response"""
         try:
-            # Look for JSON in the response using regex - improved pattern
-            json_pattern = r'Chart data: (\{.*?\})(?=\s|$)'
-            match = re.search(json_pattern, tool_response, re.DOTALL)
+            # First, try to find the special markers
+            config_pattern = r'CHART_CONFIG_START\s*(\{.*?\})\s*CHART_CONFIG_END'
+            match = re.search(config_pattern, text, re.DOTALL)
             
             if match:
                 json_str = match.group(1)
                 return json.loads(json_str)
-            else:
-                # Try to find any complete JSON object with proper nesting
-                json_pattern = r'(\{(?:[^{}]|{[^{}]*})*\})'
-                matches = re.findall(json_pattern, tool_response, re.DOTALL)
-                for json_str in matches:
-                    try:
-                        parsed = json.loads(json_str)
-                        if 'type' in parsed and 'data' in parsed:
-                            return parsed
-                    except:
-                        continue
-                
+            
+            # If no markers, try to find JSON in the response
+            json_pattern = r'(\{(?:"type":\s*"(?:bar|line|scatter|pie|histogram|doughnut)"[^}]*\{.*?\}.*?)\})'
+            match = re.search(json_pattern, text, re.DOTALL)
+            
+            if match:
+                json_str = match.group(1)
+                return json.loads(json_str)
+            
+            # Try to find any complete JSON object that looks like a chart config
+            json_objects = re.findall(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', text)
+            for json_str in json_objects:
+                try:
+                    parsed = json.loads(json_str)
+                    # Check if it's a valid chart config
+                    if isinstance(parsed, dict) and 'type' in parsed and 'data' in parsed:
+                        return parsed
+                except:
+                    continue
+                    
             return None
-        except (json.JSONDecodeError, AttributeError) as e:
+        except Exception as e:
             log(f"Failed to extract chart configuration: {str(e)}", "WARNING")
+            return None
+
+    def _extract_chart_from_tool_response(self, tool_response: str) -> dict:
+        """Extract chart configuration from tool response JSON"""
+        try:
+            # Tool responses are JSON strings, so parse them first
+            if tool_response.startswith('{') and tool_response.endswith('}'):
+                parsed_response = json.loads(tool_response)
+                
+                # Check if it's a chart response
+                if parsed_response.get('type') == 'chart':
+                    return parsed_response.get('chart_config')
+                    
+                # Check if chart_config is directly in the response
+                if 'chart_config' in parsed_response:
+                    return parsed_response['chart_config']
+                    
+            return None
+        except Exception as e:
+            log(f"Failed to extract chart from tool response: {str(e)}", "WARNING")
             return None
 
     def execute(self, file_path: str, question: str) -> dict:
@@ -112,7 +143,8 @@ Always extract and return the chart configuration JSON from tool responses for t
                 return {
                     "success": False,
                     "message": f"Error: File not found at {file_path}",
-                    "chart_config": None
+                    "chart_config": None,
+                    "type": "error"
                 }
             
             # Prepare input with context
@@ -133,33 +165,59 @@ Always extract and return the chart configuration JSON from tool responses for t
                     tool_input = action.tool_input if hasattr(action, 'tool_input') else {}
                     log(f"Step {i} - Tool: {tool_name}", "INFO")
                     log(f"Input: {tool_input}", "INFO") 
-                    log(f"Result: {observation[:200]}...", "INFO")  # Truncate long results
+                    log(f"Result: {observation[:500]}...", "INFO")  # Show more of the result
                     log("-" * 50, "INFO")
                 log("=== END VISUALIZATION TRACE ===", "INFO")
 
-            # Extract chart configuration from the output
+            # Extract chart configuration - try multiple approaches
             chart_config = None
-            if steps:
-                # Try to extract from the last tool observation
-                last_observation = steps[-1][1] if steps else ""
-                chart_config = self._extract_chart_config(last_observation)
+            chart_type = None
+            message = "Request processed."
             
-            # If no chart config found in steps, try the final output
+            # First, try to extract from tool responses
+            if steps:
+                for action, observation in steps:
+                    tool_name = action.tool if hasattr(action, 'tool') else ''
+                    if 'chart' in tool_name.lower() or 'plot' in tool_name.lower():
+                        # This is a chart-generating tool
+                        chart_config = self._extract_chart_from_tool_response(observation)
+                        if chart_config:
+                            chart_type = chart_config.get('type', 'bar')
+                            # Try to extract message from tool response
+                            try:
+                                parsed_obs = json.loads(observation)
+                                message = parsed_obs.get('message', f'{chart_type.title()} chart created successfully!')
+                            except:
+                                message = f'{chart_type.title()} chart created successfully!'
+                            break
+            
+            # If no chart config from tools, try the final output
             if not chart_config:
                 chart_config = self._extract_chart_config(output)
+                if chart_config:
+                    chart_type = chart_config.get('type', 'bar')
+                    message = self._clean_message_for_chart(output, chart_type)
 
-            # Determine if this was a successful chart generation
+            # Determine success and create response
             success = chart_config is not None
             
-            # Clean up the message for user display
-            clean_message = self._clean_message(output, success)
-
-            return {
-                "success": success,
-                "message": clean_message,
-                "chart_config": chart_config,
-                "chart_type": chart_config.get("type") if chart_config else None
-            }
+            if success:
+                return {
+                    "success": True,
+                    "message": message,
+                    "chart_config": chart_config,
+                    "chart_type": chart_type,
+                    "type": "chart"
+                }
+            else:
+                # No chart generated, return as text response
+                clean_message = self._clean_message(output, False)
+                return {
+                    "success": False,
+                    "message": clean_message,
+                    "chart_config": None,
+                    "type": "text"
+                }
 
         except Exception as e:
             error_msg = f"Visualization Agent execution error: {str(e)}"
@@ -167,35 +225,37 @@ Always extract and return the chart configuration JSON from tool responses for t
             return {
                 "success": False,
                 "message": error_msg,
-                "chart_config": None
+                "chart_config": None,
+                "type": "error"
             }
 
+    def _clean_message_for_chart(self, message: str, chart_type: str) -> str:
+        """Clean up message for successful chart generation"""
+        # Remove any JSON or technical details from the message
+        cleaned = re.sub(r'```json.*?```', '', message, flags=re.DOTALL)
+        cleaned = re.sub(r'CHART_CONFIG_START.*?CHART_CONFIG_END', '', cleaned, flags=re.DOTALL)
+        cleaned = re.sub(r'\{.*?\}', '', cleaned, flags=re.DOTALL)
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+        
+        # Create a friendly message
+        chart_name = chart_type.replace('_', ' ').title()
+        if cleaned and len(cleaned) > 10:
+            # If there's meaningful text left, use it
+            return f"✅ {chart_name} created successfully! {cleaned}"
+        else:
+            # Default friendly message
+            return f"✅ Interactive {chart_name} created successfully! The chart is ready to display."
+
     def _clean_message(self, message: str, has_chart: bool) -> str:
-        """Clean up the message for user display"""
+        """Clean up the message for display"""
         # Remove chart data JSON from message since it's returned separately
-        cleaned = re.sub(r'Chart data: \{.*\}', '', message, flags=re.DOTALL)
+        cleaned = re.sub(r'```json.*?```', '', message, flags=re.DOTALL)
+        cleaned = re.sub(r'CHART_CONFIG_START.*?CHART_CONFIG_END', '', cleaned, flags=re.DOTALL)
         
         # Clean up extra whitespace
         cleaned = re.sub(r'\s+', ' ', cleaned).strip()
         
-        # If the message is too technical, provide a friendlier version
-        if has_chart:
-            if "configuration generated successfully" in cleaned.lower():
-                chart_type = "chart"
-                if "bar plot" in cleaned.lower():
-                    chart_type = "bar chart"
-                elif "line plot" in cleaned.lower():
-                    chart_type = "line chart"
-                elif "pie chart" in cleaned.lower():
-                    chart_type = "pie chart"
-                elif "histogram" in cleaned.lower():
-                    chart_type = "histogram"
-                elif "scatter plot" in cleaned.lower():
-                    chart_type = "scatter plot"
-                
-                return f"✅ Interactive {chart_type} created successfully! The chart is ready to display."
-        
-        return cleaned if cleaned else "Visualization request processed."
+        return cleaned if cleaned else "Request processed."
 
     def get_data_summary(self, file_path: str) -> dict:
         """Get a summary of the data for visualization planning"""
