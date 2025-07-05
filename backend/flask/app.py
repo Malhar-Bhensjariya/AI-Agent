@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 import json
 import pandas as pd
+import re
 from werkzeug.exceptions import RequestEntityTooLarge
 from agents.agent_executor import execute_agent
 from tools.file_handler import save_uploaded_file, allowed_file
@@ -18,6 +19,22 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def strip_markdown(text):
+    """Remove markdown formatting from text"""
+    if not isinstance(text, str):
+        return text
+    
+    # Remove markdown formatting
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)  # Remove **bold**
+    text = re.sub(r'\*(.*?)\*', r'\1', text)     # Remove *italic*
+    text = re.sub(r'__(.*?)__', r'\1', text)     # Remove __bold__
+    text = re.sub(r'_(.*?)_', r'\1', text)       # Remove _italic_
+    text = re.sub(r'`(.*?)`', r'\1', text)       # Remove `code`
+    text = re.sub(r'```[\s\S]*?```', '', text)   # Remove ```code blocks```
+    text = re.sub(r'#{1,6}\s+', '', text)        # Remove # headers
+    
+    return text
 
 def read_file_with_preserved_order(file_path: str) -> pd.DataFrame:
     """Read file while preserving original column order"""
@@ -106,7 +123,6 @@ def _extract_chart_from_response(result) -> dict:
             pass
         
         # Case 3: Look for chart config markers in text
-        import re
         config_pattern = r'CHART_CONFIG_START\s*(\{.*?\})\s*CHART_CONFIG_END'
         match = re.search(config_pattern, result, re.DOTALL)
         
@@ -293,7 +309,7 @@ def chat():
                 "type": "chart",
                 "chart_config": chart_data["chart_config"],
                 "chart_type": chart_data["chart_type"],
-                "text": chart_data["message"],
+                "text": strip_markdown(chart_data["message"]),  # Strip markdown here
                 "success": True
             })
             log(f"Chart response generated successfully: {chart_data['chart_type']}", "INFO")
@@ -301,11 +317,11 @@ def chat():
         else:
             # This is a text response or failed chart
             if isinstance(result, dict) and 'message' in result:
-                text_response = result['message']
+                text_response = strip_markdown(result['message'])  # Strip markdown here
             elif isinstance(result, str):
-                text_response = result
+                text_response = strip_markdown(result)  # Strip markdown here
             else:
-                text_response = str(result)
+                text_response = strip_markdown(str(result))  # Strip markdown here
             
             response_data.update({
                 "type": "text",

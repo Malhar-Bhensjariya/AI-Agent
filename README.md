@@ -10,18 +10,21 @@ aida/
 │   │   │   ├── agent_executor.py           # Routes task to specific agent
 │   │   │   ├── tool_selector.py            # Gemini decides agent/tool ('a', 'b', etc.)
 │   │   │   ├── editor_agent.py             # DF editing
+│   │   │   ├── data_analyzer_agent.py      # Data analysis
 │   │   │   ├── data_transform_agent.py     # Filtering, transformation, etc.
 │   │   │   ├── visualization_agent.py      # Matplotlib/seaborn-based charts
 │   │   │   └── chat_agent.py               # Default fallback agent for general queries
 │   │   ├── services/
 │   │   │   ├── __init__.py
 │   │   │   ├── df_operator.py              # DF Langchain wrapper
+│   │   │   ├── analyzer_operator.py
 │   │   │   ├── transformer_operator.py
 │   │   │   └── visualize_operator.py
 │   │   ├── tools/
 │   │   │   ├── __init__.py
 │   │   │   ├── file_handler.py             # File reading/saving
 │   │   │   ├── df_editor.py                # Core logic for DF edits
+│   │   │   ├── analyzer.py                 # Data analysis logic
 │   │   │   ├── transformer.py              # Data manipulation logic
 │   │   │   └── plot_generator.py           # Plot/chart generation
 │   │   ├── utils/
