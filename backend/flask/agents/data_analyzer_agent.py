@@ -15,9 +15,8 @@ class AnalyzerAgentExecutor:
         if not api_key:
             raise ValueError("GEMINI_API_KEY not found in environment.")
 
-        # FIX: Use gemini-1.5-pro instead of gemini-2.0-flash for better tool calling support
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",  # Changed from gemini-2.0-flash
+            model="gemini-2.5-pro", 
             google_api_key=api_key,
             temperature=0,
             convert_system_message_to_human=True

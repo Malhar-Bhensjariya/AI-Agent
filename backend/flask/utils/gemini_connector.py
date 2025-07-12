@@ -15,7 +15,7 @@ if not api_key:
 genai.configure(api_key=api_key)
 
 # Initialize Gemini model
-model = genai.GenerativeModel("models/gemini-2.0-flash")
+model = genai.GenerativeModel("models/gemini-2.5-pro")
 
 # Generation config
 generation_config = {
