@@ -1,5 +1,94 @@
-# AI-Agent
-## AIDA – AI-powered Intelligent Data Analyst
+
+# AIDA – AI-powered Intelligent Data Analyst  
+
+AIDA is a conversational AI platform designed to make data analysis seamless and accessible. Instead of writing complex queries or code, users can simply upload CSV files and interact with their data through natural language. Powered by modular AI agents, AIDA can clean, transform, analyze, and visualize datasets, making it useful for students, analysts, and professionals who want quick insights without diving deep into technical details. 
+## Features  
+
+#### 1. CSV Upload and File Handling  
+- Upload **CSV files** directly through the interface.  
+- Files are automatically processed into **pandas DataFrames** for analysis.  
+
+#### 2. Intelligent Data Analysis  
+- Powered by modular **AI Agents** (Gemini 2.0 Flash).  
+- Supports:  
+  - Missing value detection  
+  - Outlier detection  
+  - Statistical summaries  
+  - Frequency counts  
+
+#### 3. Interactive Data Editing  
+- Perform operations such as filtering, grouping, transformations, and column edits.  
+- The **Editor Agent** enables direct data manipulation without writing code.  
+
+#### 4. Conversational Interface  
+- A **chat-driven UI** (React + Vite) to interact with datasets.  
+- Ask questions, request edits, or generate charts in plain English.  
+
+## Run Locally
+
+Clone the project
+
+```bash
+git clone https://github.com/Malhar-Bhensjariya/AI-Agent.git
+```
+
+Backend (Flask)
+- Go to the backend directory
+
+    ```bash
+    cd AI-Agent/backend/flask
+    ```
+- Create a virtual environment
+
+    ```bash
+    python -m venv venv
+    source venv/bin/activate   # On Linux/Mac
+    venv\Scripts\activate      # On Windows
+    ```
+- Install dependencies
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+- Start the Flask server
+
+    ```bash
+    python app.py
+    ```
+
+Frontend (React)
+
+- Go to the frontend directory
+
+    ```bash
+    cd ../../frontend
+    ```
+- Install dependencies
+
+    ```bash
+    npm install
+    ```
+
+- Start the development server
+
+    ```bash
+    npm run dev
+    ```
+
+Environment Variables
+
+- Flask .env
+
+    ```bash
+    GEMINI_API_KEY=your-gemini-api-key
+    ```
+- Install dependencies
+
+    ```bash
+    FLASK_API=http://localhost:5000
+    ```
+## Folder Structure
+
 
 ```text
 aida/
@@ -39,9 +128,7 @@ aida/
 │   │   ├── .env                            # Gemini keys and config
 │   │   ├── app.py                          # Flask entrypoint
 │   │   └── requirements.txt
-│   └── postgres/
-│       ├── init.sql                        # Schema or seed data
-│       └── docker-compose.yml              # Postgres service config
+|
 ├── frontend/
 │   ├── public/
 │   │   └── index.html
