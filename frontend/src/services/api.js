@@ -19,6 +19,78 @@ const getAuthHeaders = () => {
   }
 }
 
+// Enhanced cleanDataForJSON function with better NaN/invalid value handling
+export const cleanDataForJSON = (data) => {
+  if (data === null || data === undefined) {
+    return null
+  }
+  
+  if (Array.isArray(data)) {
+    return data.map(cleanDataForJSON)
+  }
+  
+  if (data && typeof data === 'object') {
+    // Handle Date objects
+    if (data instanceof Date) {
+      return data.toISOString()
+    }
+    
+    const cleaned = {}
+    for (const [key, value] of Object.entries(data)) {
+      cleaned[key] = cleanDataForJSON(value)
+    }
+    return cleaned
+  }
+  
+  // Handle numbers (including NaN and Infinity) - THIS IS THE KEY FIX
+  if (typeof data === 'number') {
+    if (isNaN(data) || !isFinite(data)) {
+      return null  // Convert NaN/Infinity to null
+    }
+    return data
+  }
+  
+  // Handle strings that might contain "NaN" or other invalid values
+  if (typeof data === 'string') {
+    const trimmed = data.trim()
+    if (trimmed === 'NaN' || trimmed === 'Infinity' || trimmed === '-Infinity' || 
+        trimmed === 'undefined' || trimmed === '') {
+      return null
+    }
+    return data
+  }
+  
+  return data
+}
+
+// Alternative: More aggressive cleaning function for problematic datasets
+export const deepCleanDataForJSON = (data) => {
+  // Convert to JSON string and back to handle edge cases
+  try {
+    const jsonString = JSON.stringify(data, (key, value) => {
+      // Handle NaN, Infinity, undefined
+      if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
+        return null
+      }
+      // Handle string representations of invalid numbers
+      if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (trimmed === 'NaN' || trimmed === 'Infinity' || trimmed === '-Infinity' || 
+            trimmed === 'undefined' || trimmed === '') {
+          return null
+        }
+      }
+      return value
+    })
+    
+    return JSON.parse(jsonString)
+  } catch (error) {
+    console.warn('Failed to clean data, using fallback:', error)
+    return cleanDataForJSON(data)
+  }
+}
+
+
 // =============================================================================
 // CURRENT FLASK APIs - Core Chat Functionality
 // =============================================================================
@@ -67,23 +139,70 @@ export const uploadFile = async (file, onProgress) => {
 // Send message in chat (main chat functionality)
 // Send message with file data directly
 export const sendMessage = async (message, fileData = null) => {
-  const payload = {
-    message,
-    file_path: fileData?.file_path || null
-  }
-  console.log('Sending message:', payload);
-  const response = await fetch(`${FLASK_URL}/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  })
+  try {
+    const payload = {
+      message,
+      file_path: fileData?.file_path || null
+    }
+    
+    // CRITICAL: Clean the payload before JSON.stringify
+    const cleanedPayload = cleanDataForJSON(payload)
+    
+    console.log('Sending message:', cleanedPayload)
+    
+    // Test JSON serialization before sending
+    const testSerialization = JSON.stringify(cleanedPayload)
+    console.log('JSON serialization test passed')
+    
+    const response = await fetch(`${FLASK_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: testSerialization
+    })
 
-  return handleResponse(response)
+    return handleResponse(response)
+  } catch (error) {
+    console.error('Error in sendMessage:', error)
+    if (error.message && error.message.includes('Unexpected token')) {
+      throw new Error('Data contains invalid values (NaN/Infinity). Please clean your data first.')
+    }
+    throw error
+  }
+}
+
+export const validateDataForJSON = (data, path = 'root') => {
+  const issues = []
+  
+  const checkValue = (value, currentPath) => {
+    if (typeof value === 'number') {
+      if (isNaN(value)) {
+        issues.push(`NaN found at ${currentPath}`)
+      } else if (!isFinite(value)) {
+        issues.push(`Infinity found at ${currentPath}`)
+      }
+    } else if (typeof value === 'string') {
+      if (value === 'NaN' || value === 'Infinity' || value === '-Infinity') {
+        issues.push(`Invalid string "${value}" found at ${currentPath}`)
+      }
+    } else if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        checkValue(item, `${currentPath}[${index}]`)
+      })
+    } else if (value && typeof value === 'object') {
+      Object.entries(value).forEach(([key, val]) => {
+        checkValue(val, `${currentPath}.${key}`)
+      })
+    }
+  }
+  
+  checkValue(data, path)
+  return issues
 }
 
 // Parse CSV/Excel file locally
+// Updated parseFileLocally function with better data cleaning
 export const parseFileLocally = async (file) => {
   return new Promise((resolve, reject) => {
     if (!file) {
@@ -101,17 +220,56 @@ export const parseFileLocally = async (file) => {
           const results = Papa.parse(csv, {
             header: true,
             dynamicTyping: true,
-            skipEmptyLines: true
+            skipEmptyLines: true,
+            transform: (value, field) => {
+              // Handle empty values first
+              if (value === "" || value === undefined || value === null) {
+                return null
+              }
+              
+              // Handle string representations of invalid numbers
+              if (typeof value === 'string') {
+                const trimmed = value.trim()
+                if (trimmed === 'NaN' || trimmed === 'Infinity' || trimmed === '-Infinity' || 
+                    trimmed === 'undefined' || trimmed === '') {
+                  return null
+                }
+              }
+              
+              // Handle numeric values - CRITICAL FIX FOR YOUR DATA
+              if (typeof value === 'number') {
+                if (isNaN(value) || !isFinite(value)) {
+                  return null
+                }
+              }
+              
+              return value
+            }
           })
           
+          // Additional cleaning pass - Double protection
+          const cleanedData = results.data.map(row => {
+            const cleanedRow = {}
+            for (const [key, value] of Object.entries(row)) {
+              cleanedRow[key] = cleanDataForJSON(value)
+            }
+            return cleanedRow
+          }).filter(row => {
+            // Remove completely empty rows
+            return Object.values(row).some(val => val !== null && val !== undefined)
+          })
+          
+          console.log(`Parsed ${results.data.length} rows, cleaned to ${cleanedData.length} rows`)
+          
           resolve({
-            data: results.data,
-            headers: Object.keys(results.data[0] || {}),
+            data: cleanedData,
+            headers: Object.keys(cleanedData[0] || {}),
             filename: file.name,
             size: file.size,
             type: file.type
           })
         } catch (error) {
+          console.error('CSV parsing error:', error)
           reject(error)
         }
       }
@@ -122,6 +280,7 @@ export const parseFileLocally = async (file) => {
     }
   })
 }
+
 
 // Health check
 export const healthCheck = async () => {
@@ -273,6 +432,7 @@ export default {
   getFileUrl,
   isBackendHealthy,
   formatFileSize,
+  cleanDataForJSON,
   
   // Future functionality
   authAPI,

@@ -98,9 +98,6 @@ const MessageBubble = ({ message }) => {
             <div className="text-xs text-gray-600 mb-1">Table Data Preview:</div>
             <div className="text-xs">
               {message.chartData?.labels?.length} points available
-              <button className="ml-2 text-blue-600 hover:text-blue-800 underline">
-                View in Table
-              </button>
             </div>
           </div>
         )}

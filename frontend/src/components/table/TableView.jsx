@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAppContext } from '../../context/AppContext'
+import DownloadFile from './DownloadFile'
 import { 
   Search, 
   FileText, 
@@ -218,6 +219,15 @@ const TableView = () => {
               </div>
             )}
           </div>
+          
+          {/* Download Component */}
+          <DownloadFile
+            headers={headers}
+            sortedData={sortedData}
+            fileName={getActiveFileName()}
+            searchTerm={searchTerm}
+            sortConfig={sortConfig}
+          />
         </div>
 
         {/* Search */}
@@ -234,6 +244,7 @@ const TableView = () => {
           </div>
           <div className="bg-white px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600">
             Showing {paginatedData.length} of {sortedData.length} rows
+            {searchTerm && ` (filtered from ${displayData.length})`}
           </div>
         </div>
       </div>

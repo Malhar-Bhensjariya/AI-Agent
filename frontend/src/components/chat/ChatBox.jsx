@@ -8,7 +8,7 @@ import {
   Trash2, 
   AlertTriangle, 
   BarChart3, 
-  TrendingUp, 
+  Funnel, 
   Search, 
   FileText, 
   Paperclip, 
@@ -195,8 +195,8 @@ const ChatBox = () => {
                 Welcome to Data Analysis Chat
               </h3>
               <p className="text-gray-600 mb-4">
-                Upload your data files (CSV, Excel, JSON) and ask questions about your data. 
-                I can help you analyze, visualize, and understand your data better.
+                Upload your CSV files and ask questions about your data. 
+                I can help you analyze, process, and understand your data better.
               </p>
               <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-500">
                 <span className="px-2 py-1 bg-gray-100 rounded-full flex items-center gap-1">
@@ -204,8 +204,8 @@ const ChatBox = () => {
                   Data Analysis
                 </span>
                 <span className="px-2 py-1 bg-gray-100 rounded-full flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" />
-                  Visualizations
+                  <Funnel className="w-3 h-3" />
+                  Processing
                 </span>
                 <span className="px-2 py-1 bg-gray-100 rounded-full flex items-center gap-1">
                   <Search className="w-3 h-3" />

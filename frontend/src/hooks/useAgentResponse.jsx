@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAppContext } from '../context/AppContext'
-import { sendMessage } from '../services/api'
+import { sendMessage, cleanDataForJSON, validateDataForJSON } from '../services/api'
 
 export const useAgentResponse = () => {
   const { addMessage, setTableView, setError, clearError, activeFile, updateFileData } = useAppContext()
@@ -12,32 +12,72 @@ export const useAgentResponse = () => {
     setLocalError(null)
 
     try {
-      const fileToSend = fileData || (activeFile ? {
-        file: activeFile.file,
-        data: activeFile.tableData,
-        headers: activeFile.headers,
-        filename: activeFile.filename,
-        file_path: activeFile.file_path
-      } : null)
+      let fileToSend = null
+      
+      if (fileData) {
+        fileToSend = fileData
+      } else if (activeFile) {
+        // CRITICAL: Clean the data before sending
+        console.log('Cleaning active file data...')
+        const cleanedTableData = cleanDataForJSON(activeFile.tableData)
+        
+        // Validate the cleaned data
+        const validationIssues = validateDataForJSON(cleanedTableData, 'tableData')
+        if (validationIssues.length > 0) {
+          console.warn('Data validation issues found:', validationIssues)
+        }
+        
+        fileToSend = {
+          file: activeFile.file,
+          data: cleanedTableData,
+          headers: activeFile.headers,
+          filename: activeFile.filename,
+          file_path: activeFile.file_path
+        }
+        
+        // Final validation of the complete payload
+        const payloadValidation = validateDataForJSON(fileToSend, 'fileToSend')
+        if (payloadValidation.length > 0) {
+          console.error('Critical: Payload validation failed:', payloadValidation)
+          throw new Error('Data contains invalid values that cannot be processed')
+        }
+        
+        console.log('File data prepared:', {
+          filename: fileToSend.filename,
+          rowCount: cleanedTableData?.length || 0,
+          headers: fileToSend.headers,
+          hasValidData: cleanedTableData && cleanedTableData.length > 0
+        })
+      }
+
+      // Test JSON serialization before sending to backend
+      try {
+        const testPayload = {
+          message,
+          file_path: fileToSend?.file_path || null
+        }
+        JSON.stringify(testPayload)
+        console.log('Pre-send JSON validation passed')
+      } catch (jsonError) {
+        console.error('JSON serialization test failed:', jsonError)
+        throw new Error('Data formatting error: Unable to serialize data for transmission')
+      }
 
       const response = await sendMessage(message, fileToSend)
-      console.log('Agent response:', response);
+      console.log('Agent response received:', response)
 
       if (response.updated_data && activeFile) {
-        console.log('Updating file data with backend response:', response.updated_data)
-        console.log('Backend headers:', response.headers)
+        console.log('Updating file data with backend response')
         updateFileData(response.updated_data, response.headers)
       }
 
-      // Extract the display text properly
+      // Extract display text with better error handling
       let displayText = ''
       let analysisResult = null
 
-      // Handle different response formats
       if (typeof response === 'string') {
         displayText = response
       } else if (response.type === 'chart') {
-        // For chart responses, use the message field
         displayText = response.text || response.message || 'Chart generated successfully'
       } else if (response.text) {
         displayText = response.text
@@ -46,51 +86,51 @@ export const useAgentResponse = () => {
       } else if (response.response) {
         displayText = response.response
       } else {
-        // If response is an object without clear text field, stringify it
-        displayText = JSON.stringify(response, null, 2)
+        try {
+          displayText = JSON.stringify(response, null, 2)
+        } catch (jsonError) {
+          console.warn('Failed to stringify response:', jsonError)
+          displayText = 'Response received but could not be displayed properly'
+        }
       }
 
-      // Ensure displayText is always a string
       if (typeof displayText !== 'string') {
         displayText = String(displayText)
       }
 
-      // Check if the display text is JSON from data analyzer
+      // Handle JSON responses
       if (displayText.trim().startsWith('{')) {
         try {
           analysisResult = JSON.parse(displayText)
-          // Format the JSON for better display
           displayText = formatJSONResponse(analysisResult)
         } catch (e) {
           console.log('Response is not valid JSON, displaying as text')
         }
       }
 
-      // Handle chart data from backend
+      // Handle chart data
       let chartData = null
       if (response.type === 'chart' && response.chart_config) {
         chartData = {
           config: response.chart_config,
           type: response.chart_type || response.chart_config.type || 'bar'
         }
-        // For chart responses, use the message as display text
         displayText = response.text || response.message || 'Chart generated successfully'
-        console.log('Chart data prepared:', chartData)
       } else if (response.chartData || response.chart_data) {
         chartData = response.chartData || response.chart_data
-        console.log('Legacy chart data format:', chartData)
       }
+      console.log('Chart data:', chartData)
 
       // Add agent's message to chat
       addMessage({
         id: Date.now() + Math.random(),
-        text: displayText, // This is now guaranteed to be a string
+        text: displayText,
         sender: 'agent',
         timestamp: new Date().toISOString(),
         chartData: chartData,
         tableData: response.tableData || response.table_data || null,
         analysis: analysisResult || response.analysis || null,
-        rawAnalysis: analysisResult // Store raw JSON for potential future use
+        rawAnalysis: analysisResult
       })
 
       if (response.showTable || response.show_table || response.tableData) {
@@ -99,13 +139,29 @@ export const useAgentResponse = () => {
 
       return response
     } catch (err) {
-      const errorMessage = err.message || 'An error occurred while processing your request'
+      console.error('Send message error:', err)
+      
+      let errorMessage = 'An error occurred while processing your request'
+      
+      // Specific error handling for common issues
+      if (err.message) {
+        if (err.message.includes('Unexpected token')) {
+          errorMessage = 'Your data contains invalid values (NaN, Infinity) that cannot be processed. The total_bedrooms column has 207 missing values causing this issue.'
+        } else if (err.message.includes('JSON')) {
+          errorMessage = 'Data formatting error - your file contains values that cannot be converted to JSON.'
+        } else if (err.message.includes('Data contains invalid values')) {
+          errorMessage = 'Your housing dataset has 207 NaN values in the total_bedrooms column. These need to be cleaned before analysis.'
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
       setLocalError(errorMessage)
       setError(errorMessage)
 
       addMessage({
         id: Date.now() + Math.random(),
-        text: `Sorry, I encountered an error: ${errorMessage}. Please try again.`,
+        text: `❌ ${errorMessage}\n\n💡 Tip: Your dataset has missing values in the 'total_bedrooms' column. Try re-uploading your file - the system should automatically clean these values.`,
         sender: 'agent',
         timestamp: new Date().toISOString(),
         error: true
@@ -173,15 +229,50 @@ export const useAgentResponse = () => {
     setLocalError(null)
 
     try {
-      const fileToSend = activeFile ? {
-        file: activeFile.file,
-        data: activeFile.tableData,
-        headers: activeFile.headers,
-        filename: activeFile.filename,
-        file_path: activeFile.file_path
-      } : null
+      let fileToSend = null
+      
+      if (activeFile) {
+        // Clean the data before sending for regeneration too
+        console.log('Cleaning active file data for regeneration...')
+        const cleanedTableData = cleanDataForJSON(activeFile.tableData)
+        
+        // Validate the cleaned data
+        const validationIssues = validateDataForJSON(cleanedTableData, 'tableData')
+        if (validationIssues.length > 0) {
+          console.warn('Data validation issues found during regeneration:', validationIssues)
+        }
+        
+        fileToSend = {
+          file: activeFile.file,
+          data: cleanedTableData,
+          headers: activeFile.headers,
+          filename: activeFile.filename,
+          file_path: activeFile.file_path
+        }
+        
+        // Final validation of the complete payload
+        const payloadValidation = validateDataForJSON(fileToSend, 'fileToSend')
+        if (payloadValidation.length > 0) {
+          console.error('Critical: Payload validation failed during regeneration:', payloadValidation)
+          throw new Error('Data contains invalid values that cannot be processed')
+        }
+      }
+
+      // Test JSON serialization before sending
+      try {
+        const testPayload = {
+          message: originalMessage,
+          file_path: fileToSend?.file_path || null
+        }
+        JSON.stringify(testPayload)
+        console.log('Pre-regeneration JSON validation passed')
+      } catch (jsonError) {
+        console.error('JSON serialization test failed during regeneration:', jsonError)
+        throw new Error('Data formatting error: Unable to serialize data for transmission')
+      }
 
       const response = await sendMessage(originalMessage, fileToSend)
+      console.log('Regenerated response received:', response)
 
       // Extract the display text properly for regenerated responses
       let displayText = ''
@@ -200,8 +291,13 @@ export const useAgentResponse = () => {
       } else if (response.response) {
         displayText = response.response
       } else {
-        // If response is an object without clear text field, stringify it
-        displayText = JSON.stringify(response, null, 2)
+        // If response is an object without clear text field, stringify it safely
+        try {
+          displayText = JSON.stringify(response, null, 2)
+        } catch (jsonError) {
+          console.warn('Failed to stringify regenerated response:', jsonError)
+          displayText = 'Response received but could not be displayed properly'
+        }
       }
 
       // Ensure displayText is always a string
@@ -215,7 +311,7 @@ export const useAgentResponse = () => {
           analysisResult = JSON.parse(displayText)
           displayText = formatJSONResponse(analysisResult)
         } catch (e) {
-          console.log('Regenerated response is not valid JSON, displaying as text')
+          console.log('Regenerated response is not valid JSON, displaying as text:', e.message)
         }
       }
 
@@ -254,13 +350,28 @@ export const useAgentResponse = () => {
 
       return response
     } catch (err) {
-      const errorMessage = err.message || 'Failed to regenerate response'
+      console.error('Regenerate response error:', err)
+      
+      let errorMessage = 'Failed to regenerate response'
+      
+      if (err.message) {
+        if (err.message.includes('Unexpected token')) {
+          errorMessage = 'Data formatting error during regeneration - your file may contain invalid values (NaN, Infinity).'
+        } else if (err.message.includes('JSON')) {
+          errorMessage = 'Data parsing error during regeneration - there may be formatting issues with your data.'
+        } else if (err.message.includes('Data contains invalid values')) {
+          errorMessage = 'Your housing dataset has invalid values that prevent regeneration. Please re-upload your file.'
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
       setLocalError(errorMessage)
       setError(errorMessage)
 
       addMessage({
         id: Date.now() + Math.random(),
-        text: `Sorry, I couldn't regenerate the response: ${errorMessage}. Please try again.`,
+        text: `❌ Sorry, I couldn't regenerate the response: ${errorMessage}\n\n💡 Tip: Try re-uploading your file to ensure all data is properly cleaned.`,
         sender: 'agent',
         timestamp: new Date().toISOString(),
         error: true
