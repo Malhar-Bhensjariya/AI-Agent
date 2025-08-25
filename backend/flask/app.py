@@ -27,7 +27,7 @@ from utils.file_utils import (
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend integration
+CORS(app, resources={r"/*": {"origins": "https://ai-da-six.vercel.app"}}, supports_credentials=True)
 
 # Configuration
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
