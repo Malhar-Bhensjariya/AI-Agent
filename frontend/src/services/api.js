@@ -1,4 +1,4 @@
-const FLASK_URL = import.meta.env.VITE_FLASK_API || 'http://localhost:5000'
+const FLASK_URL = import.meta.env.VITE_FLASK_API
 import Papa from 'papaparse'
 
 // Helper function to handle API responses
