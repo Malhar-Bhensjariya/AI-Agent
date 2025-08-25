@@ -8,4 +8,7 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  server: {
+    open: true, // <-- this line makes it open the browser automatically
+  },
 })

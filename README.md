@@ -118,6 +118,8 @@ aida/
 │   │   │   └── plot_generator.py           # Plot/chart generation
 │   │   ├── utils/
 │   │   │   ├── __init__.py
+│   │   │   ├── response_handler.py         # JSON response utilities
+│   │   │   ├── file_utils.py               # File processing utilities
 │   │   │   ├── layout.py                   # Consistent styling for plots 
 │   │   │   ├── logger.py                   # Logging utility
 │   │   │   └── gemini_connector.py         # Connect with Gemini 2.0 flash and use it in agents
