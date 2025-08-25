@@ -1,311 +1,301 @@
-import React, { useRef, useEffect, useState } from 'react'
-import * as Chart from 'chart.js'
-
-// Register Chart.js components
-Chart.Chart.register(
-  Chart.CategoryScale,
-  Chart.LinearScale,
-  Chart.BarElement,
-  Chart.LineElement,
-  Chart.PointElement,
-  Chart.ArcElement,
-  Chart.Title,
-  Chart.Tooltip,
-  Chart.Legend,
-  Chart.RadialLinearScale,
-  Chart.PolarAreaController,
-  Chart.DoughnutController,
-  Chart.PieController,
-  Chart.BarController,
-  Chart.LineController,
-  Chart.ScatterController,
-  Chart.BubbleController,
-  Chart.RadarController
-)
+import React, { useState, useEffect } from 'react'
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts'
 
 const ChartView = ({ data, type = 'bar' }) => {
-  const canvasRef = useRef(null)
-  const chartRef = useRef(null)
+  const [chartData, setChartData] = useState(null)
+  const [chartConfig, setChartConfig] = useState(null)
   const [error, setError] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Default color palette
+  const colors = [
+    '#3B82F6', // Blue
+    '#10B981', // Green
+    '#F56565', // Red
+    '#FBBF24', // Yellow
+    '#8B5CF6', // Purple
+    '#EC4899', // Pink
+    '#06B6D4', // Cyan
+    '#22C55E'  // Emerald
+  ]
+
   useEffect(() => {
-    if (!data || !canvasRef.current) {
+    if (!data) {
       setIsLoading(false)
       return
-    }
-
-    // Clean up previous chart
-    if (chartRef.current) {
-      chartRef.current.destroy()
-      chartRef.current = null
     }
 
     try {
       setIsLoading(true)
       setError(null)
 
-      const ctx = canvasRef.current.getContext('2d')
-      
-      let chartConfig = null
-      
       console.log('ChartView received data:', data)
       console.log('ChartView data type:', typeof data)
-      
-      // Handle different data formats from backend
+
+      let parsedData = null
+      let config = null
+
+      // Handle different data formats
       if (typeof data === 'string') {
         try {
-          chartConfig = JSON.parse(data)
+          parsedData = JSON.parse(data)
         } catch (parseError) {
           throw new Error('Invalid JSON format from backend')
         }
       } else if (data.config) {
-        // Handle if data is wrapped in config property (from useAgentResponse)
         console.log('Using data.config:', data.config)
         if (typeof data.config === 'string') {
-          chartConfig = JSON.parse(data.config)
+          parsedData = JSON.parse(data.config)
         } else {
-          chartConfig = data.config
+          parsedData = data.config
         }
       } else if (data.chartConfig) {
-        // Handle if data is wrapped in chartConfig property
         if (typeof data.chartConfig === 'string') {
-          chartConfig = JSON.parse(data.chartConfig)
+          parsedData = JSON.parse(data.chartConfig)
         } else {
-          chartConfig = data.chartConfig
+          parsedData = data.chartConfig
         }
-      } else if (data.labels && data.datasets) {
-        // Handle raw Chart.js data format
-        chartConfig = buildChartConfig(data, type)
       } else {
-        // Assume data is already a chart config
-        chartConfig = data
+        parsedData = data
       }
 
-      // Validate chart config structure
-      if (!chartConfig || typeof chartConfig !== 'object') {
-        console.error('Invalid chart configuration:', chartConfig)
+      if (!parsedData || typeof parsedData !== 'object') {
         throw new Error('Invalid chart configuration')
       }
 
-      console.log('Final chart config:', chartConfig)
-
-      // Ensure we have required Chart.js structure
-      if (!chartConfig.type) {
-        chartConfig.type = type || data.type || 'bar'
-      }
-
-      // Validate required Chart.js fields
-      if (!chartConfig.data) {
-        throw new Error('Chart configuration missing data property')
-      }
-
-      // Handle tooltip callbacks that come as strings from Python
-      if (chartConfig.options?.plugins?.tooltip?.callbacks) {
-        const callbacks = chartConfig.options.plugins.tooltip.callbacks
-        Object.keys(callbacks).forEach(key => {
-          if (typeof callbacks[key] === 'string') {
-            try {
-              // Convert string function to actual function for pie chart tooltips
-              const funcString = callbacks[key]
-              if (funcString.includes('function(context)')) {
-                callbacks[key] = new Function('context', funcString.replace(/^function\(context\)\s*\{?\s*return\s*/, '').replace(/;?\s*\}?$/, ''))
-              } else {
-                // Simple replacement for the pie chart tooltip format
-                callbacks[key] = function(context) {
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                  const percentage = ((context.parsed / total) * 100).toFixed(1)
-                  return context.label + ": " + context.parsed + " (" + percentage + "%)"
-                }
-              }
-            } catch (e) {
-              // If conversion fails, use default callback
-              delete callbacks[key]
-            }
-          }
-        })
-      }
-
-      // Enhance options with responsive settings
-      chartConfig.options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          intersect: false,
-          mode: 'index',
-          ...chartConfig.options?.interaction
-        },
-        plugins: {
-          legend: {
-            display: true,
-            position: chartConfig.type === 'pie' || chartConfig.type === 'doughnut' ? 'right' : 'top',
-            ...chartConfig.options?.plugins?.legend
-          },
-          tooltip: {
-            enabled: true,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            titleColor: '#ffffff',
-            bodyColor: '#ffffff',
-            borderColor: '#ffffff',
-            borderWidth: 1,
-            ...chartConfig.options?.plugins?.tooltip
-          },
-          ...chartConfig.options?.plugins
-        },
-        ...chartConfig.options
-      }
-
-      // Create the chart
-      chartRef.current = new Chart.Chart(ctx, chartConfig)
+      // Convert Chart.js format to Recharts format
+      const convertedData = convertToRechartsFormat(parsedData, type)
+      setChartData(convertedData.data)
+      setChartConfig(convertedData.config)
       setIsLoading(false)
+
     } catch (err) {
-      console.error('Chart rendering error:', err)
-      setError(err.message || 'Failed to render chart')
+      console.error('Chart processing error:', err)
+      setError(err.message || 'Failed to process chart data')
       setIsLoading(false)
-    }
-
-    // Cleanup function
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy()
-        chartRef.current = null
-      }
     }
   }, [data, type])
 
-  // Build Chart.js config from raw data (fallback)
-  const buildChartConfig = (rawData, chartType) => {
-    if (!rawData.labels || !rawData.datasets) {
-      throw new Error('Invalid chart data format - missing labels or datasets')
+  const convertToRechartsFormat = (inputData, chartType) => {
+    // If it's already in Recharts format (array of objects)
+    if (Array.isArray(inputData)) {
+      return {
+        data: inputData,
+        config: { type: chartType, datasets: [] }
+      }
     }
 
-    const config = {
-      type: chartType,
-      data: {
-        labels: rawData.labels,
-        datasets: rawData.datasets.map((dataset, index) => ({
-          label: dataset.label || `Dataset ${index + 1}`,
-          data: dataset.data,
-          backgroundColor: dataset.backgroundColor || getDefaultColors(chartType, index),
-          borderColor: dataset.borderColor || getDefaultBorderColors(chartType, index),
-          borderWidth: dataset.borderWidth || (chartType === 'line' ? 2 : 1),
-          fill: dataset.fill !== undefined ? dataset.fill : (chartType === 'line' ? false : true),
-          tension: dataset.tension || (chartType === 'line' ? 0.4 : 0),
-          ...dataset
+    // Handle Chart.js format
+    if (inputData.data && inputData.data.labels && inputData.data.datasets) {
+      const { labels, datasets } = inputData.data
+      const convertedType = inputData.type || chartType
+
+      if (convertedType === 'pie' || convertedType === 'doughnut') {
+        // For pie charts, convert to array of objects with name and value
+        const pieData = labels.map((label, index) => ({
+          name: label,
+          value: datasets[0]?.data[index] || 0
         }))
-      },
-      options: getDefaultOptions(chartType)
+        return {
+          data: pieData,
+          config: {
+            type: convertedType,
+            datasets: datasets
+          }
+        }
+      } else if (convertedType === 'radar') {
+        // For radar charts, convert to array of objects
+        const radarData = labels.map((label, index) => {
+          const item = { subject: label }
+          datasets.forEach((dataset, datasetIndex) => {
+            item[dataset.label || `Dataset ${datasetIndex + 1}`] = dataset.data[index] || 0
+          })
+          return item
+        })
+        return {
+          data: radarData,
+          config: {
+            type: convertedType,
+            datasets: datasets
+          }
+        }
+      } else {
+        // For bar/line charts, convert to array of objects
+        const chartData = labels.map((label, index) => {
+          const item = { name: label }
+          datasets.forEach((dataset, datasetIndex) => {
+            item[dataset.label || `Dataset ${datasetIndex + 1}`] = dataset.data[index] || 0
+          })
+          return item
+        })
+        return {
+          data: chartData,
+          config: {
+            type: convertedType,
+            datasets: datasets
+          }
+        }
+      }
     }
 
-    return config
+    // If it's raw data with labels and datasets at root level
+    if (inputData.labels && inputData.datasets) {
+      return convertToRechartsFormat({ data: inputData }, chartType)
+    }
+
+    // Default fallback
+    return {
+      data: [],
+      config: { type: chartType, datasets: [] }
+    }
   }
 
-  // Get default colors for different chart types
-  const getDefaultColors = (chartType, index) => {
-    const colors = [
-      'rgba(59, 130, 246, 0.6)',   // Blue
-      'rgba(16, 185, 129, 0.6)',   // Green
-      'rgba(245, 101, 101, 0.6)',  // Red
-      'rgba(251, 191, 36, 0.6)',   // Yellow
-      'rgba(139, 92, 246, 0.6)',   // Purple
-      'rgba(236, 72, 153, 0.6)',   // Pink
-      'rgba(6, 182, 212, 0.6)',    // Cyan
-      'rgba(34, 197, 94, 0.6)'     // Emerald
-    ]
-
-    if (chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea') {
-      return colors
+  const renderChart = () => {
+    if (!chartData || chartData.length === 0) {
+      return (
+        <div className="w-full h-64 flex items-center justify-center">
+          <div className="text-center">
+            <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <p className="text-gray-500">No chart data available</p>
+          </div>
+        </div>
+      )
     }
 
-    return colors[index % colors.length]
-  }
-
-  // Get default border colors
-  const getDefaultBorderColors = (chartType, index) => {
-    const colors = [
-      'rgb(59, 130, 246)',   // Blue
-      'rgb(16, 185, 129)',   // Green
-      'rgb(245, 101, 101)',  // Red
-      'rgb(251, 191, 36)',   // Yellow
-      'rgb(139, 92, 246)',   // Purple
-      'rgb(236, 72, 153)',   // Pink
-      'rgb(6, 182, 212)',    // Cyan
-      'rgb(34, 197, 94)'     // Emerald
-    ]
-
-    if (chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea') {
-      return colors
-    }
-
-    return colors[index % colors.length]
-  }
-
-  // Get default options for different chart types
-  const getDefaultOptions = (chartType) => {
-    const baseOptions = {
-      responsive: true,
-      maintainAspectRatio: false
-    }
+    const chartType = chartConfig?.type || type
 
     switch (chartType) {
-      case 'line':
-        return {
-          ...baseOptions,
-          scales: {
-            x: {
-              display: true,
-              title: {
-                display: false
-              }
-            },
-            y: {
-              display: true,
-              title: {
-                display: false
-              }
-            }
-          }
-        }
       case 'bar':
-        return {
-          ...baseOptions,
-          scales: {
-            x: {
-              display: true,
-              title: {
-                display: false
-              }
-            },
-            y: {
-              display: true,
-              beginAtZero: true,
-              title: {
-                display: false
-              }
-            }
-          }
-        }
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {chartConfig?.datasets?.map((dataset, index) => (
+                <Bar
+                  key={index}
+                  dataKey={dataset.label || `Dataset ${index + 1}`}
+                  fill={dataset.backgroundColor || colors[index % colors.length]}
+                />
+              )) || <Bar dataKey="value" fill={colors[0]} />}
+            </BarChart>
+          </ResponsiveContainer>
+        )
+
+      case 'line':
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {chartConfig?.datasets?.map((dataset, index) => (
+                <Line
+                  key={index}
+                  type="monotone"
+                  dataKey={dataset.label || `Dataset ${index + 1}`}
+                  stroke={dataset.borderColor || colors[index % colors.length]}
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+              )) || <Line type="monotone" dataKey="value" stroke={colors[0]} strokeWidth={2} />}
+            </LineChart>
+          </ResponsiveContainer>
+        )
+
       case 'pie':
       case 'doughnut':
-        return {
-          ...baseOptions,
-          plugins: {
-            legend: {
-              position: 'right'
-            }
+        const CustomTooltip = ({ active, payload }) => {
+          if (active && payload && payload.length) {
+            const data = payload[0]
+            const total = chartData.reduce((sum, item) => sum + item.value, 0)
+            const percentage = ((data.value / total) * 100).toFixed(1)
+            return (
+              <div className="bg-gray-800 text-white p-2 rounded shadow-lg">
+                <p>{`${data.payload.name}: ${data.value} (${percentage}%)`}</p>
+              </div>
+            )
           }
+          return null
         }
+
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={chartType === 'doughnut' ? 60 : 0}
+                outerRadius={120}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        )
+
       case 'radar':
-        return {
-          ...baseOptions,
-          scales: {
-            r: {
-              beginAtZero: true
-            }
-          }
-        }
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <RadarChart data={chartData}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="subject" />
+              <PolarRadiusAxis />
+              <Tooltip />
+              <Legend />
+              {chartConfig?.datasets?.map((dataset, index) => (
+                <Radar
+                  key={index}
+                  name={dataset.label || `Dataset ${index + 1}`}
+                  dataKey={dataset.label || `Dataset ${index + 1}`}
+                  stroke={colors[index % colors.length]}
+                  fill={colors[index % colors.length]}
+                  fillOpacity={0.3}
+                />
+              ))}
+            </RadarChart>
+          </ResponsiveContainer>
+        )
+
       default:
-        return baseOptions
+        return (
+          <div className="w-full h-64 flex items-center justify-center">
+            <p className="text-gray-500">Unsupported chart type: {chartType}</p>
+          </div>
+        )
     }
   }
 
@@ -346,28 +336,9 @@ const ChartView = ({ data, type = 'bar' }) => {
     )
   }
 
-  // No data state
-  if (!data) {
-    return (
-      <div className="chart-container bg-gray-50 rounded-lg p-4">
-        <div className="w-full h-64 flex items-center justify-center">
-          <div className="text-center">
-            <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <p className="text-gray-500">No chart data available</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="chart-container bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-      {/* Chart Canvas */}
-      <div className="relative" style={{ height: '400px' }}>
-        <canvas ref={canvasRef} />
-      </div>
+      {renderChart()}
     </div>
   )
 }
