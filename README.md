@@ -2,6 +2,9 @@
 # AIDA – AI-powered Intelligent Data Analyst  
 
 AIDA is a conversational AI platform designed to make data analysis seamless and accessible. Instead of writing complex queries or code, users can simply upload CSV files and interact with their data through natural language. Powered by modular AI agents, AIDA can clean, transform, analyze, and visualize datasets, making it useful for students, analysts, and professionals who want quick insights without diving deep into technical details. 
+## Demo
+
+✨ **Check out the live demo:** [Try it here!](https://ai-da-six.vercel.app/)
 ## Features  
 
 #### 1. CSV Upload and File Handling  
@@ -118,8 +121,6 @@ aida/
 │   │   │   └── plot_generator.py           # Plot/chart generation
 │   │   ├── utils/
 │   │   │   ├── __init__.py
-│   │   │   ├── response_handler.py         # JSON response utilities
-│   │   │   ├── file_utils.py               # File processing utilities
 │   │   │   ├── layout.py                   # Consistent styling for plots 
 │   │   │   ├── logger.py                   # Logging utility
 │   │   │   └── gemini_connector.py         # Connect with Gemini 2.0 flash and use it in agents
