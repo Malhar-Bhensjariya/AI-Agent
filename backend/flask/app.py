@@ -1,8 +1,3 @@
-"""
-Flask App - Main Routes Only
-All utility functions moved to separate modules for better organization
-"""
-
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
