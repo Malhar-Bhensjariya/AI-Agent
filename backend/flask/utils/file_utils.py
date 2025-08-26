@@ -1,6 +1,7 @@
 """
 File processing utilities for Flask app
 Handles file reading, cleaning, and data processing
+FIXED: Handle modified DataFrames with new columns
 """
 
 import os
@@ -97,6 +98,35 @@ def prepare_file_data_for_response(file_path: str) -> dict:
         
     except Exception as e:
         log(f"Error preparing file data for {file_path}: {str(e)}", "ERROR")
+        raise
+
+
+def prepare_dataframe_for_response(df: pd.DataFrame, filename: str = None) -> dict:
+    """
+    CRITICAL FIX: Prepare DataFrame data for JSON response
+    This function handles modified DataFrames with new columns
+    """
+    try:
+        # Clean data for JSON serialization
+        updated_data = clean_for_json_serialization(df.to_dict('records'))
+        headers = clean_for_json_serialization(df.columns.tolist())
+        
+        log(f"Prepared DataFrame response with {len(df)} rows, {len(df.columns)} columns", "INFO")
+        log(f"Headers: {headers}", "INFO")
+        
+        return {
+            "updated_data": updated_data,
+            "headers": headers,
+            "file_info": {
+                "rows": len(df),
+                "columns": len(df.columns),
+                "column_order": headers,
+                "filename": filename or "processed_data"
+            }
+        }
+        
+    except Exception as e:
+        log(f"Error preparing DataFrame for response: {str(e)}", "ERROR")
         raise
 
 

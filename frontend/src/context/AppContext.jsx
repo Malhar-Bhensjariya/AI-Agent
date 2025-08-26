@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useCallback } from 'react'
 
 // Create context
 const AppContext = createContext()
@@ -18,7 +18,7 @@ export const AppProvider = ({ children }) => {
   const [tableView, setTableView] = useState(false) // Add this missing state
 
   // Enhanced message functions
-  const addMessage = (message) => {
+  const addMessage = useCallback((message) => {
     const messageWithId = {
       id: Date.now() + Math.random(),
       timestamp: new Date().toISOString(),
@@ -26,25 +26,25 @@ export const AppProvider = ({ children }) => {
     }
     setMessages(prev => [...prev, messageWithId])
     setError(null)
-  }
+  }, [])
 
-  const updateMessage = (id, updates) => {
+  const updateMessage = useCallback((id, updates) => {
     setMessages(prev => prev.map(msg => 
       msg.id === id ? { ...msg, ...updates } : msg
     ))
-  }
+  }, [])
 
-  const deleteMessage = (id) => {
+  const deleteMessage = useCallback((id) => {
     setMessages(prev => prev.filter(msg => msg.id !== id))
-  }
+  }, [])
 
-  const clearMessages = () => {
+  const clearMessages = useCallback(() => {
     setMessages([])
     setError(null)
-  }
+  }, [])
 
   // File management functions - simplified and focused
-  const setCurrentFile = (fileData) => {
+  const setCurrentFile = useCallback((fileData) => {
     console.log('Setting active file:', fileData)
     
     if (!fileData) {
@@ -73,35 +73,42 @@ export const AppProvider = ({ children }) => {
       
       // Add analysis tracking
       lastAnalysis: null,
-      analysisHistory: []
+      analysisHistory: [],
+
+      // Add a unique update ID to force re-renders
+      updateId: Date.now() + Math.random()
     }
 
     console.log('Structured file data:', structuredFile)
     setActiveFile(structuredFile)
-  }
+  }, [])
 
-  const updateFileData = (newData, newHeaders = null) => {
-    if (!activeFile) {
-      console.warn('No active file to update')
-      return
-    }
-
+  const updateFileData = useCallback((newData, newHeaders = null) => {
     console.log('Updating file data:', newData, 'with headers:', newHeaders)
     
-    const updatedFile = {
-      ...activeFile,
-      tableData: newData,
-      headers: newHeaders || activeFile.headers,
-      rowCount: newData ? newData.length : 0,
-      updatedAt: new Date().toISOString()
-    }
+    setActiveFile(prevFile => {
+      if (!prevFile) {
+        console.warn('No active file to update')
+        return prevFile
+      }
 
-    console.log('Updated file data:', updatedFile)
-    setActiveFile(updatedFile)
-  }
+      const updatedFile = {
+        ...prevFile,
+        tableData: newData,
+        headers: newHeaders || prevFile.headers,
+        rowCount: newData ? newData.length : 0,
+        updatedAt: new Date().toISOString(),
+        // Force re-render with new update ID
+        updateId: Date.now() + Math.random()
+      }
+
+      console.log('Updated file data:', updatedFile)
+      return updatedFile
+    })
+  }, [])
 
   // Add analysis tracking
-  const addAnalysisToFile = (analysisType, analysisResult) => {
+  const addAnalysisToFile = useCallback((analysisType, analysisResult) => {
     if (!activeFile) return
 
     const analysis = {
@@ -113,35 +120,36 @@ export const AppProvider = ({ children }) => {
     setActiveFile(prev => ({
       ...prev,
       lastAnalysis: analysis,
-      analysisHistory: [...(prev.analysisHistory || []), analysis]
+      analysisHistory: [...(prev.analysisHistory || []), analysis],
+      updateId: Date.now() + Math.random() // Force re-render
     }))
-  }
+  }, [activeFile])
 
-  const clearCurrentFile = () => {
+  const clearCurrentFile = useCallback(() => {
     console.log('Clearing active file')
     setActiveFile(null)
     setTableView(false) // Also hide table view when clearing file
-  }
+  }, [])
 
-  // Get current table data - this is what components should use
-  const getCurrentTableData = () => {
+  // Get current table data - these are memoized with activeFile as dependency
+  const getCurrentTableData = useCallback(() => {
     return activeFile?.tableData || []
-  }
+  }, [activeFile?.tableData, activeFile?.updateId])
 
-  const getCurrentHeaders = () => {
+  const getCurrentHeaders = useCallback(() => {
     return activeFile?.headers || []
-  }
+  }, [activeFile?.headers, activeFile?.updateId])
 
   // File info getters
-  const hasActiveFile = () => {
-    return activeFile !== null && Array.isArray(activeFile.tableData) && activeFile.tableData.length > 0
-  }
+  const hasActiveFile = useCallback(() => {
+    return activeFile !== null && Array.isArray(activeFile?.tableData) && activeFile.tableData.length > 0
+  }, [activeFile?.tableData, activeFile?.updateId])
 
-  const getActiveFileName = () => {
+  const getActiveFileName = useCallback(() => {
     return activeFile?.filename || 'No file loaded'
-  }
+  }, [activeFile?.filename, activeFile?.updateId])
 
-  const getActiveFileInfo = () => {
+  const getActiveFileInfo = useCallback(() => {
     if (!activeFile) return null
     
     return {
@@ -152,18 +160,19 @@ export const AppProvider = ({ children }) => {
       parsedAt: activeFile.parsedAt,
       updatedAt: activeFile.updatedAt,
       lastAnalysis: activeFile.lastAnalysis,
-      analysisCount: activeFile.analysisHistory?.length || 0
+      analysisCount: activeFile.analysisHistory?.length || 0,
+      updateId: activeFile.updateId
     }
-  }
+  }, [activeFile])
 
   // Enhanced UI functions
-  const clearError = () => setError(null)
+  const clearError = useCallback(() => setError(null), [])
 
   // Enhanced chart functions
-  const updateChartData = (data) => setChartData(data)
+  const updateChartData = useCallback((data) => setChartData(data), [])
 
   // Enhanced chat functions
-  const createNewChat = () => {
+  const createNewChat = useCallback(() => {
     const newChat = {
       id: Date.now() + Math.random(),
       title: 'New Chat',
@@ -174,47 +183,47 @@ export const AppProvider = ({ children }) => {
     setCurrentChat(newChat)
     clearMessages()
     return newChat
-  }
+  }, [clearMessages])
 
-  const updateChat = (id, updates) => {
+  const updateChat = useCallback((id, updates) => {
     setChats(prev => prev.map(chat => 
       chat.id === id ? { ...chat, ...updates } : chat
     ))
-  }
+  }, [])
 
-  const updateChatTitle = (chatId, title) => {
+  const updateChatTitle = useCallback((chatId, title) => {
     updateChat(chatId, { title, updatedAt: new Date().toISOString() })
-  }
+  }, [updateChat])
 
-  const deleteChat = (id) => {
+  const deleteChat = useCallback((id) => {
     setChats(prev => prev.filter(chat => chat.id !== id))
     if (currentChat?.id === id) setCurrentChat(null)
-  }
+  }, [currentChat])
 
   // Session management
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     clearMessages()
     clearError()
     setTableView(false)
-  }
+  }, [clearMessages, clearError])
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     clearSession()
     setChartData(null)
     setAnalysis(null)
     // Keep active file - it should persist
-  }
+  }, [clearSession])
 
   // Auth functions
-  const login = (userData) => setUser(userData)
+  const login = useCallback((userData) => setUser(userData), [])
   
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null)
     clearAll()
     clearCurrentFile() // Clear file on logout
-  }
+  }, [clearAll, clearCurrentFile])
 
-  // Context value
+  // Context value - memoize stable references
   const contextValue = {
     // State
     messages,

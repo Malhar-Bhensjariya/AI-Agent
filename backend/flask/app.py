@@ -21,13 +21,30 @@ from utils.response_handler import (
 from utils.file_utils import (
     read_file_with_preserved_order,
     prepare_file_data_for_response,
+    prepare_dataframe_for_response,  # NEW: For modified DataFrames
     validate_file_path,
     format_file_size
 )
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://ai-da-six.vercel.app"}}, supports_credentials=True)
+
+# Environment-based CORS configuration
+debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+environment = os.environ.get('FLASK_ENV', 'development')
+
+if debug_mode or environment == 'development':
+    # Development: Allow localhost origins
+    CORS(app, 
+         origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://ai-da-six.vercel.app"],
+         supports_credentials=True)
+    print("CORS enabled for development with localhost origins")
+else:
+    # Production: Restrict to production domain
+    CORS(app, 
+         resources={r"/*": {"origins": "https://ai-da-six.vercel.app"}}, 
+         supports_credentials=True)
+    print("CORS enabled for production with restricted origins")
 
 # Configuration
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
@@ -45,7 +62,9 @@ def health_check():
             "status": "healthy",
             "message": "CSV Agent Flask App is running",
             "upload_folder": app.config['UPLOAD_FOLDER'],
-            "max_file_size": format_file_size(app.config['MAX_CONTENT_LENGTH'])
+            "max_file_size": format_file_size(app.config['MAX_CONTENT_LENGTH']),
+            "environment": environment,
+            "debug_mode": debug_mode
         }
         return jsonify(create_safe_response(response))
     except Exception as e:
@@ -96,7 +115,7 @@ def upload_file():
 def chat():
     """
     Main chat endpoint - handles all user messages and agent routing
-    FIXED: Robust JSON handling with proper error recovery
+    FIXED: Proper handling of modified DataFrames with new columns
     """
     try:
         # Parse request data
@@ -139,17 +158,7 @@ def chat():
             "message": user_message
         }
 
-        # Add file data if present
-        if file_path:
-            try:
-                file_data = prepare_file_data_for_response(file_path)
-                response_data.update(file_data)
-                response_data["file_path"] = file_path
-            except Exception as e:
-                log(f"Error preparing file data: {str(e)}", "ERROR")
-                response_data["error"] = f"Failed to read file data: {str(e)}"
-
-        # Execute agent with error handling
+        # Execute agent first (CRITICAL CHANGE)
         try:
             result = execute_agent(file_path=file_path, user_prompt=user_message)
             log(f"Agent result type: {type(result)}", "INFO")
@@ -165,9 +174,52 @@ def chat():
                 "and answer questions about your data. What would you like to explore?"
             )
             response_data.update(create_text_response(fallback_text))
+            
+            # Add original file data for fallback
+            if file_path:
+                try:
+                    file_data = prepare_file_data_for_response(file_path)
+                    response_data.update(file_data)
+                    response_data["file_path"] = file_path
+                except Exception as file_e:
+                    log(f"Error preparing file data for fallback: {str(file_e)}", "ERROR")
+            
             return jsonify(create_safe_response(response_data))
+
+        # CRITICAL FIX: Check if result contains modified DataFrame
+        if isinstance(result, dict) and 'modified_df' in result:
+            # Agent modified the DataFrame - use the modified data
+            modified_df = result['modified_df']
+            filename = os.path.basename(file_path) if file_path else "processed_data"
+            
+            try:
+                df_response_data = prepare_dataframe_for_response(modified_df, filename)
+                response_data.update(df_response_data)
+                response_data["file_path"] = file_path
+                log("Using modified DataFrame data from agent", "INFO")
+            except Exception as df_e:
+                log(f"Error preparing modified DataFrame: {str(df_e)}", "ERROR")
+                # Fallback to original file data
+                if file_path:
+                    try:
+                        file_data = prepare_file_data_for_response(file_path)
+                        response_data.update(file_data)
+                        response_data["file_path"] = file_path
+                    except Exception as file_e:
+                        log(f"Error preparing fallback file data: {str(file_e)}", "ERROR")
+                        
+        elif file_path:
+            # No DataFrame modification - use original file data
+            try:
+                file_data = prepare_file_data_for_response(file_path)
+                response_data.update(file_data)
+                response_data["file_path"] = file_path
+                log("Using original file data", "INFO")
+            except Exception as e:
+                log(f"Error preparing file data: {str(e)}", "ERROR")
+                response_data["error"] = f"Failed to read file data: {str(e)}"
         
-        # Process agent result
+        # Process agent result for display
         chart_data = extract_chart_from_response(result)
         
         if chart_data and chart_data.get('success'):
@@ -178,8 +230,15 @@ def chat():
             
         else:
             # Text response
-            if isinstance(result, dict) and 'message' in result:
-                text = result['message']
+            if isinstance(result, dict):
+                if 'message' in result:
+                    text = result['message']
+                elif 'text' in result:
+                    text = result['text']
+                elif 'response' in result:
+                    text = result['response']
+                else:
+                    text = str(result)
             elif isinstance(result, str):
                 text = result
             else:
@@ -257,11 +316,11 @@ def handle_exception(e):
 # Development server
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
     print(f"Starting Flask app on port {port}")
     print(f"Upload folder: {app.config['UPLOAD_FOLDER']}")
     print(f"Debug mode: {debug_mode}")
+    print(f"Environment: {environment}")
     print(f"Max file size: {format_file_size(app.config['MAX_CONTENT_LENGTH'])}")
     
     app.run(

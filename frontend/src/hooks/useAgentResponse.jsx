@@ -68,7 +68,24 @@ export const useAgentResponse = () => {
 
       if (response.updated_data && activeFile) {
         console.log('Updating file data with backend response')
-        updateFileData(response.updated_data, response.headers)
+        
+        // CRITICAL FIX: Detect new headers from the updated data
+        let updatedHeaders = response.headers || activeFile.headers
+        
+        // If we have updated data, extract all column names from the first row
+        if (response.updated_data && response.updated_data.length > 0) {
+          const actualHeaders = Object.keys(response.updated_data[0])
+          console.log('Headers from backend:', updatedHeaders)
+          console.log('Actual headers from data:', actualHeaders)
+          
+          // Use the actual headers from the data if they differ from response.headers
+          if (actualHeaders.length > updatedHeaders.length) {
+            updatedHeaders = actualHeaders
+            console.log('Using headers from data structure:', updatedHeaders)
+          }
+        }
+        
+        updateFileData(response.updated_data, updatedHeaders)
       }
 
       // Extract display text with better error handling
@@ -273,6 +290,29 @@ export const useAgentResponse = () => {
 
       const response = await sendMessage(originalMessage, fileToSend)
       console.log('Regenerated response received:', response)
+
+      // CRITICAL FIX: Also handle new headers in regeneration
+      if (response.updated_data && activeFile) {
+        console.log('Updating file data with regenerated backend response')
+        
+        // Detect new headers from the updated data
+        let updatedHeaders = response.headers || activeFile.headers
+        
+        // If we have updated data, extract all column names from the first row
+        if (response.updated_data && response.updated_data.length > 0) {
+          const actualHeaders = Object.keys(response.updated_data[0])
+          console.log('Regeneration - Headers from backend:', updatedHeaders)
+          console.log('Regeneration - Actual headers from data:', actualHeaders)
+          
+          // Use the actual headers from the data if they differ from response.headers
+          if (actualHeaders.length > updatedHeaders.length) {
+            updatedHeaders = actualHeaders
+            console.log('Regeneration - Using headers from data structure:', updatedHeaders)
+          }
+        }
+        
+        updateFileData(response.updated_data, updatedHeaders)
+      }
 
       // Extract the display text properly for regenerated responses
       let displayText = ''

@@ -21,7 +21,8 @@ const TableView = () => {
     getCurrentHeaders, 
     hasActiveFile, 
     getActiveFileName,
-    getActiveFileInfo 
+    getActiveFileInfo,
+    activeFile
   } = useAppContext()
   
   const [currentPage, setCurrentPage] = useState(1)
@@ -29,15 +30,15 @@ const TableView = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
 
-  // Get data directly from context
+  // Get data directly from context - keep it simple like the working version
   const rawData = getCurrentTableData()
   const headers = getCurrentHeaders()
   const fileInfo = getActiveFileInfo()
 
-  // Reset page when data changes
+  // Reset page when data changes - use activeFile.updateId to detect immediate changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [rawData])
+  }, [rawData, activeFile?.updateId])
 
   // Reorder data to match header order (ensure column consistency)
   const reorderedData = useMemo(() => {
@@ -51,7 +52,7 @@ const TableView = () => {
       })
       return reorderedRow
     })
-  }, [rawData, headers])
+  }, [rawData, headers, activeFile?.updateId])
 
   // Use reordered data instead of raw data
   const displayData = reorderedData
@@ -125,6 +126,17 @@ const TableView = () => {
     }
     return value.toString()
   }
+
+  // Debug logging to track updates
+  useEffect(() => {
+    console.log('TableView data updated:', {
+      hasFile: hasActiveFile(),
+      headersLength: headers.length,
+      rawDataLength: rawData.length,
+      fileName: getActiveFileName(),
+      updateId: activeFile?.updateId
+    })
+  }, [hasActiveFile, headers.length, rawData.length, getActiveFileName, activeFile?.updateId])
 
   // Show loading or empty state
   if (!hasActiveFile()) {
@@ -281,14 +293,14 @@ const TableView = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {paginatedData.map((row, index) => (
               <tr 
-                key={row._tableId} 
+                key={`${row._tableId}-${activeFile?.updateId}`}
                 className={`hover:bg-blue-50 transition-colors ${
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                 }`}
               >
                 {headers.map((header) => (
                   <td 
-                    key={`${row._tableId}-${header}`}
+                    key={`${row._tableId}-${header}-${activeFile?.updateId}`}
                     className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate"
                     title={formatCellValue(row[header])}
                   >
