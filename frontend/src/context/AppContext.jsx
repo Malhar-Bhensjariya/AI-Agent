@@ -223,6 +223,9 @@ export const AppProvider = ({ children }) => {
     clearCurrentFile() // Clear file on logout
   }, [clearAll, clearCurrentFile])
 
+  // Computed values
+  const isLoggedIn = !!user
+
   // Context value - memoize stable references
   const contextValue = {
     // State
@@ -276,7 +279,8 @@ export const AppProvider = ({ children }) => {
     // Auth
     login,
     logout,
-    setUser
+    setUser,
+    isLoggedIn
   }
 
   return (
