@@ -2,6 +2,37 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from .utils.logger import log
+from .utils.chroma_memory import store_interaction, retrieve_context
+import os
+from pymongo import MongoClient
+
+
+# Setup Mongo client (lazy)
+_mongo_client = None
+_mongo_db = None
+
+def _get_mongo():
+    global _mongo_client, _mongo_db
+    if _mongo_client is not None:
+        return _mongo_db
+
+    mongo_uri = os.getenv('MONGO_URI')
+    if not mongo_uri:
+        # attempt to construct from provided template and env password
+        template = 'mongodb+srv://malhar:<db_password>@cluster0.kwb9l6o.mongodb.net/?appName=Cluster0'
+        pwd = os.getenv('MONGO_PASSWORD')
+        if not pwd:
+            return None
+        mongo_uri = template.replace('<db_password>', pwd)
+
+    try:
+        _mongo_client = MongoClient(mongo_uri)
+        _mongo_db = _mongo_client.get_database()  # default DB from URI
+        return _mongo_db
+    except Exception:
+        _mongo_client = None
+        _mongo_db = None
+        return None
 import os
 from dotenv import load_dotenv
 
@@ -54,25 +85,71 @@ Remember to be helpful while keeping the conversation natural and enjoyable!""")
         # Create the chain with output parser
         self.chain = self.prompt | self.llm | StrOutputParser()
 
-    def execute(self, question: str, file_path: str = None) -> str:
-        """Execute a conversational query with optional file context"""
+    def execute(self, question: str = None, file_path: str = None, file_bytes: bytes = None, user_id: str = None) -> str:
+        """Execute a conversational query with optional file context.
+
+        Backwards-compatible: accepts `file_bytes` and `question` keywords used
+        by existing controllers. `user_id` is used for RAG memory lookup.
+        """
         try:
-            log(f"Chat Agent - User Input: {question}", "INFO")
-            
-            # If file_path is provided, add context about file availability
+            input_question = question
+            log(f"Chat Agent - User Input: {input_question}", "INFO")
+
+            # Retrieve nearby interactions from RAG memory (if any)
+            retrieved = None
+            try:
+                if input_question:
+                    retrieved = retrieve_context(user_id or 'global', input_question, k=5)
+            except Exception:
+                retrieved = None
+
+            # If file_path or file_bytes is provided, mention it in the prompt
+            file_notice = None
             if file_path:
-                context_input = f"Note: User has uploaded a file at {file_path}. If they ask about data analysis, let them know they should use specific data analysis commands.\n\nUser message: {question}"
+                file_notice = f"Note: User has uploaded a file at {file_path}."
                 log(f"Chat Agent - Processing with file context: {file_path}", "INFO")
-            else:
-                context_input = question
-            
+            elif file_bytes:
+                file_notice = "Note: User has uploaded binary file content for analysis."
+                log(f"Chat Agent - Processing with file bytes", "INFO")
+
+            # Build full input combining retrieved context and file notice
+            parts = []
+            if retrieved:
+                parts.append(f"Context from previous conversation or memory:\n{retrieved}")
+            if file_notice:
+                parts.append(file_notice)
+            if input_question:
+                parts.append(f"User message: {input_question}")
+
+            full_input = "\n\n".join(parts) if parts else input_question or ""
+
             # Generate response using the chain
             response = self.chain.invoke({
-                "input": context_input
+                "input": full_input
             })
-            
+
+            # Store interaction in RAG memory and Mongo
+            try:
+                if input_question and response is not None:
+                    store_interaction(user_id or 'global', input_question, response)
+                    # store chat message in Mongo
+                    db = _get_mongo()
+                    if db is not None:
+                        try:
+                            coll = db.get_collection('chat_messages')
+                            coll.insert_one({
+                                'user_id': user_id or 'global',
+                                'query': input_question,
+                                'response': response,
+                                'ts': int(time.time())
+                            })
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
             log(f"Chat Agent - Response Generated: {len(response)} characters", "INFO")
-            return response
+            return {'response': response, 'retrieved_memory': retrieved}
 
         except Exception as e:
             error_msg = f"Chat Agent execution error: {str(e)}"

@@ -7,13 +7,14 @@ chat_bp = Blueprint('chat', __name__)
 def execute():
     try:
         data = request.get_json()
-        file_path = data.get('file_path')
+        file_id = data.get('file_id')
         user_prompt = data.get('user_prompt')
+        user_id = data.get('user_id')
 
         if not user_prompt:
             return jsonify({"error": "user_prompt is required"}), 400
 
-        result = execute_chat_task(file_path, user_prompt)
+        result = execute_chat_task(file_id=file_id, user_prompt=user_prompt, user_id=user_id)
         return jsonify(result)
 
     except Exception as e:

@@ -146,9 +146,10 @@ export const uploadFile = async (file, onProgress) => {
 // Send message with file data directly
 export const sendMessage = async (message, fileData = null) => {
   try {
+    // Only send file identifiers to backend to avoid transmitting full data
     const payload = {
       message,
-      file_path: fileData?.file_path || null
+      file_id: fileData?.id || fileData?.file_id || null
     }
     
     // CRITICAL: Clean the payload before JSON.stringify

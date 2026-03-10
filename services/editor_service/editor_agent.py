@@ -97,25 +97,56 @@ Always provide clear, actionable responses and make data manipulation feel effor
             max_iterations=5  # Increased for complex operations
         )
 
-    def execute(self, file_path: str, question: str):
-        """Execute user query against the specified file"""
+    def execute(self, file_path: str = None, file_bytes: bytes = None, question: str = None):
+        """Execute user query against the specified file. Supports `file_bytes` to
+        process files in-memory (avoids repeated disk writes).
+        """
         try:
-            # Validate file_path is not None
-            if not file_path:
+            # Prefer in-memory bytes; fall back to file_path for compatibility
+            if file_bytes is None and not file_path:
                 return "❌ Error: No file provided. Please upload a CSV or Excel file first."
-            
-            # Validate file exists
-            if not os.path.exists(file_path):
-                return f"❌ Error: File not found at {file_path}"
-            
-            # Prepare input with enhanced context
-            full_input = f"""
+
+            # If bytes provided, attempt to load into a temporary dataframe for preview
+            preview_note = ''
+            if file_bytes is not None:
+                from io import BytesIO
+                import pandas as pd
+
+                bio = BytesIO(file_bytes)
+                # Try CSV first, then Excel
+                try:
+                    df = pd.read_csv(bio, encoding='utf-8')
+                    preview_note = f"(in-memory CSV with shape {df.shape})"
+                except Exception:
+                    bio.seek(0)
+                    try:
+                        df = pd.read_excel(bio, engine='openpyxl')
+                        preview_note = f"(in-memory Excel with shape {df.shape})"
+                    except Exception:
+                        df = None
+                        preview_note = '(in-memory file loaded but could not parse into DataFrame)'
+
+                # Prepare input with enhanced context (mention in-memory usage)
+                full_input = f"""
+FILE: in-memory (file_id)
+USER REQUEST: {question}
+{preview_note}
+
+Instructions: Analyze the request and use the most appropriate tools to fulfill it efficiently. For complex operations, break them down into logical steps and explain your process.
+"""
+
+            else:
+                # Existing behavior when file_path is provided
+                if not os.path.exists(file_path):
+                    return f"❌ Error: File not found at {file_path}"
+
+                full_input = f"""
 FILE: {file_path}
 USER REQUEST: {question}
 
 Instructions: Analyze the request and use the most appropriate tools to fulfill it efficiently. For complex operations, break them down into logical steps and explain your process.
 """
-            
+
             result = self.executor.invoke({
                 "input": full_input
             })

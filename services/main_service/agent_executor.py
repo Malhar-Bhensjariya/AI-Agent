@@ -11,7 +11,12 @@ SERVICE_REGISTRY = {
     "chat": "http://localhost:5005/chat/execute"
 }
 
-def execute_agent(file_path: str, user_prompt: str) -> str:
+def execute_agent(file_id: str, user_prompt: str) -> str:
+    """
+    Execute the selected agent by passing `file_id` and `user_prompt` to the
+    downstream service. Upstream services should now reference files by id
+    rather than local filesystem paths.
+    """
     try:
         # Step 1: Let Gemini classify the prompt
         agent_key = detect_agent_type(user_prompt)
@@ -22,9 +27,9 @@ def execute_agent(file_path: str, user_prompt: str) -> str:
         if not service_url:
             return f"Unknown agent type '{agent_key}' selected."
 
-        # Step 3: Make HTTP POST request to the service
+        # Step 3: Make HTTP POST request to the service with file_id
         payload = {
-            "file_path": file_path,
+            "file_id": file_id,
             "user_prompt": user_prompt
         }
         response = requests.post(service_url, json=payload, timeout=300)  # 5 min timeout

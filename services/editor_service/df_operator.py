@@ -1,5 +1,32 @@
 from typing import List, Any, Dict
+import os
+import requests
 from langchain_core.tools import tool
+
+# File Service client helper
+FILE_SERVICE_URL = os.getenv('FILE_SERVICE_URL', 'http://file_service:5010')
+
+def _send_patch(file_id: str, patch: Dict[str, Any], requested_by: str = 'editor_service') -> Dict[str, Any]:
+    url = f"{FILE_SERVICE_URL}/file/{file_id}/apply-op"
+    payload = {'op_type': 'patch', 'patch': patch, 'requested_by': requested_by}
+    try:
+        resp = requests.post(url, json=payload, timeout=30)
+        try:
+            return resp.json()
+        except Exception:
+            return {'success': False, 'error': f'bad response: {resp.text}'}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def _get_preview_headers(file_id: str) -> List[str]:
+    try:
+        url = f"{FILE_SERVICE_URL}/file/{file_id}/preview?page=1&size=1"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        return data.get('headers') or data.get('columns') or []
+    except Exception:
+        return []
+
 from .df_editor import DataEditor
 
 # Original basic tools
@@ -12,9 +39,12 @@ def remove_row(file_path: str, row_index: int) -> str:
         row_index: Row number to remove (1-based, e.g., 1 for first row)
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.remove_row(row_index)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        idx = int(row_index) - 1
+        patch = {'deletes': [idx]}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Removed row {row_index}. File updated."
+        return f"Error removing row: {result.get('error') or result}"
     except Exception as e:
         return f"Error removing row: {str(e)}"
 
@@ -27,9 +57,11 @@ def remove_column(file_path: str, column_name: str) -> str:
         column_name: Name of the column to remove
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.remove_column(column_name)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        patch = {'updates': [], 'deletes': [], 'inserts': [], 'drop_columns': [column_name]}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Removed column '{column_name}'. File updated."
+        return f"Error removing column: {result.get('error') or result}"
     except Exception as e:
         return f"Error removing column: {str(e)}"
 
@@ -43,9 +75,11 @@ def add_column(file_path: str, column_name: str, default_value: str = "") -> str
         default_value: Default value for all cells in the new column
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.add_column(column_name, default_value)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        patch = {'inserts': [], 'updates': [], 'deletes': [], 'add_columns': [{ 'name': column_name, 'default': default_value }]}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Added column '{column_name}'. File updated."
+        return f"Error adding column: {result.get('error') or result}"
     except Exception as e:
         return f"Error adding column: {str(e)}"
 
@@ -58,9 +92,20 @@ def add_row(file_path: str, row_values: List[Any]) -> str:
         row_values: List of values for the new row (must match column count and order)
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.add_row(row_values)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        headers = _get_preview_headers(file_path)
+        values = {}
+        if headers and isinstance(row_values, list):
+            for i, v in enumerate(row_values):
+                if i < len(headers):
+                    values[headers[i]] = v
+        else:
+            return "Error adding row: cannot determine columns"
+
+        patch = {'inserts': [{ 'values': values }]}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Added row. File updated."
+        return f"Error adding row: {result.get('error') or result}"
     except Exception as e:
         return f"Error adding row: {str(e)}"
 
@@ -75,9 +120,12 @@ def set_cell(file_path: str, row_index: int, column_name: str, value: Any) -> st
         value: New value for the cell
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.set_cell_value(row_index, column_name, value)
-        return f"{message}. File updated."
+        idx = int(row_index) - 1
+        patch = {'updates': [{ 'row_index': idx, 'values': {column_name: value} }]}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Set cell at row {row_index}, column '{column_name}' to '{value}'. File updated."
+        return f"Error setting cell: {result.get('error') or result}"
     except Exception as e:
         return f"Error setting cell: {str(e)}"
 
@@ -91,9 +139,18 @@ def set_row(file_path: str, row_index: int, values: List[Any]) -> str:
         values: List of new values for the row (must match column count)
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.set_row_values(row_index, values)
-        return f"{message}. File updated."
+        headers = _get_preview_headers(file_path)
+        if not headers:
+            return "Error setting row: cannot determine columns"
+        if len(values) != len(headers):
+            return f"Error setting row: value count {len(values)} does not match columns {len(headers)}"
+        vals = {headers[i]: values[i] for i in range(len(headers))}
+        idx = int(row_index) - 1
+        patch = {'updates': [{ 'row_index': idx, 'values': vals }]}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Updated row {row_index}. File updated."
+        return f"Error setting row: {result.get('error') or result}"
     except Exception as e:
         return f"Error setting row: {str(e)}"
 
@@ -106,20 +163,16 @@ def get_preview(file_path: str, num_rows: int = 5) -> str:
         num_rows: Number of rows to preview (default: 5)
     """
     try:
-        editor = DataEditor(file_path)
-        preview = editor.get_preview(num_rows)
-        
-        result = f"""Preview of {preview['file_path']} (showing {min(num_rows, len(preview['data']))} of {preview['shape'][0]} rows):
+        url = f"{FILE_SERVICE_URL}/file/{file_path}/preview?page=1&size={num_rows}"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        headers = data.get('headers') or data.get('columns') or []
+        rows = data.get('rows') or []
 
-Columns: {', '.join(preview['columns'])}
-
-Data:
-"""
-        for i, row in enumerate(preview['data'], 1):
-            result += f"Row {i}: {dict(row)}\n"
-            
+        result = f"Preview of {file_path} (showing {len(rows)} rows):\n\nColumns: {', '.join(headers)}\n\nData:\n"
+        for i, row in enumerate(rows, 1):
+            result += f"Row {i}: {row}\n"
         return result
-        
     except Exception as e:
         return f"Error getting preview: {str(e)}"
 
@@ -133,9 +186,11 @@ def rename_column(file_path: str, old_name: str, new_name: str) -> str:
         new_name: New name for the column
     """
     try:
-        editor = DataEditor(file_path)
-        message = editor.rename_column(old_name, new_name)
-        return f"{message}. File updated."
+        patch = {'updates': [], 'deletes': [], 'inserts': [], 'rename_columns': [{ 'from': old_name, 'to': new_name }]}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Renamed column '{old_name}' to '{new_name}'. File updated."
+        return f"Error renaming column: {result.get('error') or result}"
     except Exception as e:
         return f"Error renaming column: {str(e)}"
 
@@ -156,9 +211,11 @@ def remove_rows_by_condition(file_path: str, column_name: str, condition: str) -
         remove_rows_by_condition("file.csv", "Status", "!= Active") - removes rows where Status is not "Active"
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.remove_rows_by_condition(column_name, condition)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        patch = {'condition_deletes': { 'column': column_name, 'condition': condition }}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Removed rows where {column_name} {condition}. File updated."
+        return f"Error removing rows by condition: {result.get('error') or result}"
     except Exception as e:
         return f"Error removing rows by condition: {str(e)}"
 
@@ -178,9 +235,11 @@ def update_column_conditional(file_path: str, target_column: str, condition_colu
         update_column_conditional("file.csv", "Status", "Category", "Burgers", "Junk") - sets Status="Junk" where Category="Burgers"
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.update_column_conditional(target_column, condition_column, condition, new_value)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        patch = {'conditional_updates': { 'target': target_column, 'condition_column': condition_column, 'condition': condition, 'new_value': new_value }}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Updated column '{target_column}' where {condition_column} {condition}. File updated."
+        return f"Error updating column conditionally: {result.get('error') or result}"
     except Exception as e:
         return f"Error updating column conditionally: {str(e)}"
 
@@ -201,9 +260,11 @@ def add_calculated_column(file_path: str, new_column: str, source_column: str, o
         add_calculated_column("file.csv", "Price_Plus_Tax", "Price", "add", 5.99)
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.add_calculated_column(new_column, source_column, operation, operand)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        patch = {'calculated_columns': [{ 'name': new_column, 'source': source_column, 'operation': operation, 'operand': operand }]}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Added calculated column '{new_column}'. File updated."
+        return f"Error adding calculated column: {result.get('error') or result}"
     except Exception as e:
         return f"Error adding calculated column: {str(e)}"
 
@@ -223,9 +284,20 @@ def bulk_update_cells(file_path: str, updates: List[Dict[str, Any]]) -> str:
         ]
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.bulk_update_cells(updates)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        # Convert 1-based rows to 0-based
+        conv = []
+        for u in updates:
+            r = u.get('row')
+            c = u.get('column')
+            v = u.get('value')
+            if r is None or c is None:
+                continue
+            conv.append({ 'row_index': int(r) - 1, 'values': { c: v } })
+        patch = {'updates': conv}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Bulk update applied. File updated."
+        return f"Error bulk updating cells: {result.get('error') or result}"
     except Exception as e:
         return f"Error bulk updating cells: {str(e)}"
 
@@ -244,9 +316,21 @@ def filter_and_save(file_path: str, column_name: str, condition: str, save_filte
         filter_and_save("file.csv", "Calories", "> 300", False) - preview rows with Calories > 300
     """
     try:
-        editor = DataEditor(file_path)
-        message, result_df = editor.filter_and_save(column_name, condition, save_filtered)
-        return f"{message}. Result shape: {result_df.shape}"
+        if save_filtered:
+            patch = {'condition_filter_replace': { 'column': column_name, 'condition': condition }}
+            result = _send_patch(file_path, patch)
+            if result.get('success'):
+                return f"Filtered and saved rows where {column_name} {condition}. File updated."
+            return f"Error filtering data: {result.get('error') or result}"
+        else:
+            # Preview only: call preview and filter locally on returned rows
+            url = f"{FILE_SERVICE_URL}/file/{file_path}/preview?page=1&size=1000"
+            resp = requests.get(url, timeout=10)
+            data = resp.json()
+            rows = data.get('rows', [])
+            # Naive filter in string form
+            filtered = [r for r in rows if str(r.get(column_name, '')).find(str(condition).strip().strip('"').strip("'")) != -1]
+            return f"Found {len(filtered)} rows where {column_name} {condition} (preview only)"
     except Exception as e:
         return f"Error filtering data: {str(e)}"
 
@@ -264,9 +348,11 @@ def sort_data(file_path: str, columns: List[str], ascending: bool = True) -> str
         sort_data("file.csv", ["Category", "Calories"], True) - sort by Category then Calories, both ascending
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.sort_data(columns, ascending)
-        return f"{message}. File updated. Shape: {updated_df.shape}"
+        patch = {'sort': { 'columns': columns, 'ascending': ascending }}
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Sorted by {columns} (ascending={ascending}). File updated."
+        return f"Error sorting data: {result.get('error') or result}"
     except Exception as e:
         return f"Error sorting data: {str(e)}"
 
@@ -283,30 +369,17 @@ def get_statistics(file_path: str, column_name: str = None) -> str:
         get_statistics("file.csv", "Calories") - statistics for Calories column only
     """
     try:
-        editor = DataEditor(file_path)
-        stats = editor.get_statistics(column_name)
-        
+        # Use preview to compute lightweight stats
+        url = f"{FILE_SERVICE_URL}/file/{file_path}/preview?page=1&size=1000"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        rows = data.get('rows', [])
+        headers = data.get('headers') or data.get('columns') or []
         if column_name:
-            # Format single column stats
-            col_stats = stats[column_name]
-            result = f"Statistics for column '{column_name}':\n"
-            for key, value in col_stats.items():
-                result += f"  {key}: {value}\n"
+            vals = [r.get(column_name) for r in rows if column_name in r]
+            return f"Statistics for column '{column_name}': count={len(vals)}"
         else:
-            # Format overall stats
-            result = f"Dataset Overview:\n"
-            result += f"  Shape: {stats['shape']} (rows, columns)\n"
-            result += f"  Columns: {', '.join(stats['columns'])}\n"
-            result += f"\nData Types:\n"
-            for col, dtype in stats['dtypes'].items():
-                result += f"  {col}: {dtype}\n"
-            result += f"\nMissing Values:\n"
-            for col, nulls in stats['null_counts'].items():
-                if nulls > 0:
-                    result += f"  {col}: {nulls} missing\n"
-        
-        return result
-        
+            return f"Dataset Overview: Columns={', '.join(headers)} Rows sample={len(rows)}"
     except Exception as e:
         return f"Error getting statistics: {str(e)}"
 
@@ -324,9 +397,24 @@ def duplicate_rows(file_path: str, row_indices: List[int], count: int = 1) -> st
         duplicate_rows("file.csv", [5], 1) - duplicate row 5 once
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.duplicate_rows(row_indices, count)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        inserts = []
+        # Fetch a small preview to get row data
+        url = f"{FILE_SERVICE_URL}/file/{file_path}/preview?page=1&size=1000"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        rows = data.get('rows', [])
+        for r in row_indices:
+            idx = int(r) - 1
+            if 0 <= idx < len(rows):
+                for _ in range(count):
+                    inserts.append({ 'values': rows[idx] })
+        if not inserts:
+            return "Error duplicating rows: rows not found in preview"
+        patch = { 'inserts': inserts }
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Duplicated rows {row_indices} {count} times. File updated."
+        return f"Error duplicating rows: {result.get('error') or result}"
     except Exception as e:
         return f"Error duplicating rows: {str(e)}"
 
@@ -346,9 +434,11 @@ def find_and_replace(file_path: str, column_name: str, find_value: Any, replace_
         find_and_replace("file.csv", "Price", 9.99, 10.99)
     """
     try:
-        editor = DataEditor(file_path)
-        message, updated_df = editor.find_and_replace(column_name, find_value, replace_value)
-        return f"{message}. File updated. New shape: {updated_df.shape}"
+        patch = { 'find_and_replace': { 'column': column_name, 'find': find_value, 'replace': replace_value } }
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Replaced occurrences of '{find_value}' with '{replace_value}' in column '{column_name}'. File updated."
+        return f"Error in find and replace: {result.get('error') or result}"
     except Exception as e:
         return f"Error in find and replace: {str(e)}"
 
@@ -370,33 +460,11 @@ def add_conditional_column(file_path: str, new_column: str, condition_column: st
         add_conditional_column("file.csv", "High_Price", "Price", ">= 15.00", "Expensive", "Affordable")
     """
     try:
-        editor = DataEditor(file_path)
-        
-        # Check if column already exists
-        if new_column in editor.df.columns:
-            return f"Error: Column '{new_column}' already exists"
-        
-        # Validate condition column
-        if condition_column not in editor.df.columns:
-            return f"Error: Condition column '{condition_column}' does not exist"
-        
-        # Parse condition and create mask
-        mask = editor._parse_condition(condition, condition_column)
-        
-        # Add new column with conditional values
-        editor.df[new_column] = false_value  # Default value
-        editor.df.loc[mask, new_column] = true_value  # True condition value
-        
-        # Update original columns list
-        editor.original_columns.append(new_column)
-        editor._save_dataframe()
-        
-        true_count = mask.sum()
-        false_count = len(editor.df) - true_count
-        
-        message = f"Added conditional column '{new_column}': {true_count} rows = '{true_value}', {false_count} rows = '{false_value}'"
-        return f"{message}. File updated. New shape: {editor.df.shape}"
-        
+        patch = { 'conditional_column': { 'new_column': new_column, 'condition_column': condition_column, 'condition': condition, 'true_value': true_value, 'false_value': false_value } }
+        result = _send_patch(file_path, patch)
+        if result.get('success'):
+            return f"Added conditional column '{new_column}'. File updated."
+        return f"Error adding conditional column: {result.get('error') or result}"
     except Exception as e:
         return f"Error adding conditional column: {str(e)}"
 
@@ -412,21 +480,20 @@ def get_unique_values(file_path: str, column_name: str) -> str:
         get_unique_values("file.csv", "Category") - shows all unique categories
     """
     try:
-        editor = DataEditor(file_path)
-        editor._validate_column(column_name)
-        
-        unique_values = editor.df[column_name].unique()
+        url = f"{FILE_SERVICE_URL}/file/{file_path}/preview?page=1&size=1000"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        rows = data.get('rows', [])
+        vals = set()
+        for r in rows:
+            if column_name in r:
+                vals.add(str(r.get(column_name)))
+        unique_values = list(vals)
         unique_count = len(unique_values)
-        
-        # Handle NaN values
-        unique_values = [str(val) if pd.notna(val) else "NULL" for val in unique_values]
-        
         result = f"Unique values in column '{column_name}' ({unique_count} total):\n"
         for i, value in enumerate(unique_values, 1):
             result += f"  {i}. {value}\n"
-        
         return result
-        
     except Exception as e:
         return f"Error getting unique values: {str(e)}"
 
@@ -442,18 +509,19 @@ def count_values(file_path: str, column_name: str) -> str:
         count_values("file.csv", "Category") - shows count of each category
     """
     try:
-        editor = DataEditor(file_path)
-        editor._validate_column(column_name)
-        
-        value_counts = editor.df[column_name].value_counts(dropna=False)
-        
+        url = f"{FILE_SERVICE_URL}/file/{file_path}/preview?page=1&size=1000"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        rows = data.get('rows', [])
+        counts = {}
+        for r in rows:
+            v = r.get(column_name)
+            key = str(v)
+            counts[key] = counts.get(key, 0) + 1
         result = f"Value counts for column '{column_name}':\n"
-        for value, count in value_counts.items():
-            display_value = str(value) if pd.notna(value) else "NULL"
-            result += f"  {display_value}: {count}\n"
-        
+        for value, count in counts.items():
+            result += f"  {value}: {count}\n"
         return result
-        
     except Exception as e:
         return f"Error counting values: {str(e)}"
 

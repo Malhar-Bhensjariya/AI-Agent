@@ -41,7 +41,15 @@ Backend (Microservices)
     ```bash
     cd AI-Agent/services
     ```
-- Start all services
+- Each service has its own Python virtual environment (`venv` folder).
+  Run the install script to create and populate these environments:
+
+    ```bash
+    ../install_dependencies.sh   # or install_dependencies.bat on Windows
+    ```
+
+- Start all services using the helper script. It will automatically invoke
+  the `python` binary from each service's `venv`, ensuring isolation:
 
     ```bash
     python start_all.py
