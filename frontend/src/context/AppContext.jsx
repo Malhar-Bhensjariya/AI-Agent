@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react'
+import { firestore } from '../services/firebase'
+import { doc, onSnapshot } from 'firebase/firestore'
 
 // Create context
 const AppContext = createContext()
@@ -16,6 +18,7 @@ export const AppProvider = ({ children }) => {
   const [chats, setChats] = useState([])
   const [user, setUser] = useState(null)
   const [tableView, setTableView] = useState(false) // Add this missing state
+  const previewUnsubRef = useRef(null)
 
   // Enhanced message functions
   const addMessage = useCallback((message) => {
@@ -48,6 +51,8 @@ export const AppProvider = ({ children }) => {
     console.log('Setting active file:', fileData)
     
     if (!fileData) {
+      // Unsubscribe any preview listener
+      try { if (previewUnsubRef.current) { previewUnsubRef.current(); previewUnsubRef.current = null } } catch (e) {}
       setActiveFile(null)
       return
     }
@@ -66,6 +71,7 @@ export const AppProvider = ({ children }) => {
       // Original file object for backend operations
       originalFile: fileData.file || fileData.originalFile || null,
       file_path: fileData.file_path || fileData.filePath || fileData.path || null,
+      file_id: fileData.file_id || fileData.fileId || fileData.id || null,
       
       // Parsing info
       parsedAt: new Date().toISOString(),
@@ -81,6 +87,31 @@ export const AppProvider = ({ children }) => {
 
     console.log('Structured file data:', structuredFile)
     setActiveFile(structuredFile)
+
+    // Subscribe to Firestore preview document if file_id available
+    try {
+      if (structuredFile.file_id && firestore) {
+        // Unsubscribe previous
+        if (previewUnsubRef.current) {
+          previewUnsubRef.current()
+          previewUnsubRef.current = null
+        }
+
+        const previewDoc = doc(firestore, 'previews', structuredFile.file_id)
+        const unsub = onSnapshot(previewDoc, (snap) => {
+          if (!snap.exists()) return
+          const data = snap.data()
+          // Expect { headers, rows }
+          const rows = data.rows || []
+          const headers = data.headers || (rows.length > 0 ? Object.keys(rows[0]) : [])
+          updateFileData(rows, headers)
+        })
+
+        previewUnsubRef.current = unsub
+      }
+    } catch (e) {
+      console.error('Preview subscription failed:', e)
+    }
   }, [])
 
   const updateFileData = useCallback((newData, newHeaders = null) => {
@@ -127,6 +158,7 @@ export const AppProvider = ({ children }) => {
 
   const clearCurrentFile = useCallback(() => {
     console.log('Clearing active file')
+    try { if (previewUnsubRef.current) { previewUnsubRef.current(); previewUnsubRef.current = null } } catch (e) {}
     setActiveFile(null)
     setTableView(false) // Also hide table view when clearing file
   }, [])
@@ -223,6 +255,9 @@ export const AppProvider = ({ children }) => {
     clearCurrentFile() // Clear file on logout
   }, [clearAll, clearCurrentFile])
 
+  // Computed values
+  const isLoggedIn = !!user
+
   // Context value - memoize stable references
   const contextValue = {
     // State
@@ -276,7 +311,8 @@ export const AppProvider = ({ children }) => {
     // Auth
     login,
     logout,
-    setUser
+    setUser,
+    isLoggedIn
   }
 
   return (

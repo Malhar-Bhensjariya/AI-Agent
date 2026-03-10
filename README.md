@@ -35,28 +35,24 @@ Clone the project
 git clone https://github.com/Malhar-Bhensjariya/AI-Agent.git
 ```
 
-Backend (Flask)
-- Go to the backend directory
+Backend (Microservices)
+- Go to the services directory
 
     ```bash
-    cd AI-Agent/backend/flask
+    cd AI-Agent/services
     ```
-- Create a virtual environment
+- Each service has its own Python virtual environment (`venv` folder).
+  Run the install script to create and populate these environments:
 
     ```bash
-    python -m venv venv
-    source venv/bin/activate   # On Linux/Mac
-    venv\Scripts\activate      # On Windows
+    ../install_dependencies.sh   # or install_dependencies.bat on Windows
     ```
-- Install dependencies
+
+- Start all services using the helper script. It will automatically invoke
+  the `python` binary from each service's `venv`, ensuring isolation:
 
     ```bash
-    pip install -r requirements.txt
-    ```
-- Start the Flask server
-
-    ```bash
-    python app.py
+    python start_all.py
     ```
 
 Frontend (React)
@@ -80,12 +76,14 @@ Frontend (React)
 
 Environment Variables
 
-- Flask .env
+- Services .env
 
     ```bash
     GEMINI_API_KEY=your-gemini-api-key
+    MONGODB_URI=mongodb+srv://<db_username>:<db_password>@cluster0.kwb9l6o.mongodb.net/?appName=Cluster0
+    JWT_SECRET_KEY=your-jwt-secret-key
     ```
-- Install dependencies
+- Frontend .env
 
     ```bash
     FLASK_API=http://localhost:5000
@@ -95,43 +93,66 @@ Environment Variables
 
 ```text
 aida/
-├── backend/
-│   ├── flask/
-│   │   ├── agents/
-│   │   │   ├── __init__.py
-│   │   │   ├── agent_executor.py           # Routes task to specific agent
-│   │   │   ├── tool_selector.py            # Gemini decides agent/tool ('a', 'b', etc.)
-│   │   │   ├── editor_agent.py             # DF editing
-│   │   │   ├── data_analyzer_agent.py      # Data analysis
-│   │   │   ├── data_transform_agent.py     # Filtering, transformation, etc.
-│   │   │   ├── visualization_agent.py      # Matplotlib/seaborn-based charts
-│   │   │   └── chat_agent.py               # Default fallback agent for general queries
-│   │   ├── services/
-│   │   │   ├── __init__.py
-│   │   │   ├── df_operator.py              # DF Langchain wrapper
-│   │   │   ├── analyzer_operator.py
-│   │   │   ├── transformer_operator.py
-│   │   │   └── visualize_operator.py
-│   │   ├── tools/
-│   │   │   ├── __init__.py
-│   │   │   ├── file_handler.py             # File reading/saving
-│   │   │   ├── df_editor.py                # Core logic for DF edits
-│   │   │   ├── analyzer.py                 # Data analysis logic
-│   │   │   ├── transformer.py              # Data manipulation logic
-│   │   │   └── plot_generator.py           # Plot/chart generation
+├── services/
+│   ├── main_service/                       # Main service (tool selector, agent executor, auth, uploads)
+│   │   ├── app.py                          # Flask app for main service
+│   │   ├── agent_executor.py               # Routes to microservices
+│   │   ├── tool_selector.py                # Gemini decides agent
+│   │   ├── tools/                          # File handling tools
+│   │   ├── utils/                          # Shared utilities
+│   │   ├── uploads/                        # Uploaded files
+│   │   ├── static/                         # Static files (plots)
+│   │   ├── requirements.txt
+│   │   ├── .env
+│   │   └── venv/
+│   ├── editor_service/                     # Data editing microservice
+│   │   ├── app.py
+│   │   ├── editor_agent.py
+│   │   ├── df_operator.py
+│   │   ├── df_editor.py
+│   │   ├── file_handler.py
 │   │   ├── utils/
-│   │   │   ├── __init__.py
-│   │   │   ├── layout.py                   # Consistent styling for plots 
-│   │   │   ├── logger.py                   # Logging utility
-│   │   │   └── gemini_connector.py         # Connect with Gemini 2.0 flash and use it in agents
-│   │   ├── uploads/                        # Uploaded files (CSV, Excel, etc.)
-│   │   ├── static/
-│   │   │   └── plots/                      # Saved plot images
-│   │   ├── vectorstore/                    # (Optional) For future RAG/CAG
-│   │   ├── .env                            # Gemini keys and config
-│   │   ├── app.py                          # Flask entrypoint
-│   │   └── requirements.txt
-|
+│   │   ├── requirements.txt
+│   │   ├── .env
+│   │   └── venv/
+│   ├── analyzer_service/                   # Data analysis microservice
+│   │   ├── app.py
+│   │   ├── data_analyzer_agent.py
+│   │   ├── analyzer_operator.py
+│   │   ├── analyzer.py
+│   │   ├── file_handler.py
+│   │   ├── utils/
+│   │   ├── requirements.txt
+│   │   ├── .env
+│   │   └── venv/
+│   ├── transform_service/                  # Data transformation microservice
+│   │   ├── app.py
+│   │   ├── data_transform_agent.py
+│   │   ├── transformer_operator.py
+│   │   ├── transformer.py
+│   │   ├── file_handler.py
+│   │   ├── utils/
+│   │   ├── requirements.txt
+│   │   ├── .env
+│   │   └── venv/
+│   ├── visualization_service/              # Visualization microservice
+│   │   ├── app.py
+│   │   ├── visualization_agent.py
+│   │   ├── visualize_operator.py
+│   │   ├── plot_generator.py
+│   │   ├── file_handler.py
+│   │   ├── utils/
+│   │   ├── requirements.txt
+│   │   ├── .env
+│   │   └── venv/
+│   ├── chat_service/                       # Chat microservice
+│   │   ├── app.py
+│   │   ├── chat_agent.py
+│   │   ├── utils/
+│   │   ├── requirements.txt
+│   │   ├── .env
+│   │   └── venv/
+│   └── start_all.py                        # Script to start all services
 ├── frontend/
 │   ├── public/
 │   │   └── index.html

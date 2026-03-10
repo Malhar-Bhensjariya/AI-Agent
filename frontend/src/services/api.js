@@ -102,6 +102,12 @@ export const uploadFile = async (file, onProgress) => {
     const formData = new FormData()
     formData.append('file', file)
     
+    // Add auth token to headers
+    const token = localStorage.getItem('authToken')
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    }
+    
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable) {
         const progress = (event.loaded / event.total) * 100
@@ -140,9 +146,10 @@ export const uploadFile = async (file, onProgress) => {
 // Send message with file data directly
 export const sendMessage = async (message, fileData = null) => {
   try {
+    // Only send file identifiers to backend to avoid transmitting full data
     const payload = {
       message,
-      file_path: fileData?.file_path || null
+      file_id: fileData?.id || fileData?.file_id || null
     }
     
     // CRITICAL: Clean the payload before JSON.stringify
@@ -157,7 +164,8 @@ export const sendMessage = async (message, fileData = null) => {
     const response = await fetch(`${FLASK_URL}/chat`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
       },
       body: testSerialization
     })
@@ -297,10 +305,10 @@ export const getFileUrl = (filename) => {
 // FUTURE NODE.JS APIs - Chat History & Authentication
 // =============================================================================
 
-// Authentication APIs (for future Node.js/SQL backend)
+// Authentication APIs
 export const authAPI = {
   login: async (credentials) => {
-    const response = await fetch(`${FLASK_URL}/auth/login`, {
+    const response = await fetch(`${FLASK_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials)
@@ -309,7 +317,7 @@ export const authAPI = {
   },
 
   register: async (userData) => {
-    const response = await fetch(`${FLASK_URL}/auth/register`, {
+    const response = await fetch(`${FLASK_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)

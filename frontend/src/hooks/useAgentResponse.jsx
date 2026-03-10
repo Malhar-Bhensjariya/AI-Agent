@@ -12,49 +12,19 @@ export const useAgentResponse = () => {
     setLocalError(null)
 
     try {
+      // Only send a file identifier to the backend to avoid transmitting full data
       let fileToSend = null
-      
       if (fileData) {
-        fileToSend = fileData
+        fileToSend = { id: fileData.id || fileData.file_id }
       } else if (activeFile) {
-        // CRITICAL: Clean the data before sending
-        console.log('Cleaning active file data...')
-        const cleanedTableData = cleanDataForJSON(activeFile.tableData)
-        
-        // Validate the cleaned data
-        const validationIssues = validateDataForJSON(cleanedTableData, 'tableData')
-        if (validationIssues.length > 0) {
-          console.warn('Data validation issues found:', validationIssues)
-        }
-        
-        fileToSend = {
-          file: activeFile.file,
-          data: cleanedTableData,
-          headers: activeFile.headers,
-          filename: activeFile.filename,
-          file_path: activeFile.file_path
-        }
-        
-        // Final validation of the complete payload
-        const payloadValidation = validateDataForJSON(fileToSend, 'fileToSend')
-        if (payloadValidation.length > 0) {
-          console.error('Critical: Payload validation failed:', payloadValidation)
-          throw new Error('Data contains invalid values that cannot be processed')
-        }
-        
-        console.log('File data prepared:', {
-          filename: fileToSend.filename,
-          rowCount: cleanedTableData?.length || 0,
-          headers: fileToSend.headers,
-          hasValidData: cleanedTableData && cleanedTableData.length > 0
-        })
+        fileToSend = { id: activeFile.id || activeFile.file_id }
       }
 
       // Test JSON serialization before sending to backend
       try {
         const testPayload = {
           message,
-          file_path: fileToSend?.file_path || null
+          file_id: fileToSend?.id || null
         }
         JSON.stringify(testPayload)
         console.log('Pre-send JSON validation passed')
